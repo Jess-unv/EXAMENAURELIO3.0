@@ -15,13 +15,13 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { BlurView } from 'expo-blur';
+import { BlurView } from "expo-blur";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 
 // Colores unificados con tu app
 const THEME_COLORS = {
-  primary: "#6366f1", 
+  primary: "#6366f1",
   secondary: "#a855f7",
   error: "#EF4444",
   success: "#10B981",
@@ -30,7 +30,7 @@ const THEME_COLORS = {
 
 export default function AuthScreen() {
   const { colors, isDarkMode } = useTheme();
-  
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -116,14 +116,28 @@ export default function AuthScreen() {
       return;
     }
     if (isRegister) {
-      if (!formData.name) { showPopup("INGRESA TU NOMBRE"); return; }
-      if (formData.password !== formData.confirmPassword) { showPopup("LAS CONTRASEÑAS NO COINCIDEN"); return; }
-      if (formData.password.length < 6) { showPopup("MÍNIMO 6 CARACTERES"); return; }
+      if (!formData.name) {
+        showPopup("INGRESA TU NOMBRE");
+        return;
+      }
+      if (formData.password !== formData.confirmPassword) {
+        showPopup("LAS CONTRASEÑAS NO COINCIDEN");
+        return;
+      }
+      if (formData.password.length < 6) {
+        showPopup("MÍNIMO 6 CARACTERES");
+        return;
+      }
     }
 
     try {
-      let result = isRegister 
-        ? await signUp(formData.email, formData.password, formData.name, "client")
+      let result = isRegister
+        ? await signUp(
+            formData.email,
+            formData.password,
+            formData.name,
+            "client",
+          )
         : await signIn(formData.email, formData.password);
 
       if (result.success) {
@@ -146,13 +160,33 @@ export default function AuthScreen() {
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(fadeAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
-      Animated.spring(slideAnim, { toValue: 0, tension: 20, useNativeDriver: true }),
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        tension: 20,
+        useNativeDriver: true,
+      }),
     ]).start();
   }, [isRegister]);
 
-  const renderInput = (field, icon, placeholder, isPass = false, state, setState) => (
-    <View style={[styles.inputGroup, { backgroundColor: isDarkMode ? "#1A1A1A" : "#F5F7FA" }]}>
+  const renderInput = (
+    field,
+    icon,
+    placeholder,
+    isPass = false,
+    state,
+    setState,
+  ) => (
+    <View
+      style={[
+        styles.inputGroup,
+        { backgroundColor: isDarkMode ? "#1A1A1A" : "#F5F7FA" },
+      ]}
+    >
       <Ionicons name={icon} size={20} color={THEME_COLORS.primary} />
       <TextInput
         style={[styles.input, { color: colors.text }]}
@@ -165,7 +199,11 @@ export default function AuthScreen() {
       />
       {isPass && (
         <TouchableOpacity onPress={() => setState(!state)}>
-          <Ionicons name={state ? "eye" : "eye-off"} size={20} color="#94A3B8" />
+          <Ionicons
+            name={state ? "eye" : "eye-off"}
+            size={20}
+            color="#94A3B8"
+          />
         </TouchableOpacity>
       )}
     </View>
@@ -176,21 +214,34 @@ export default function AuthScreen() {
       <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} />
 
       {/* POPUP GENÉRICO (para validaciones locales) */}
-      <Animated.View style={[styles.popup, { 
-        transform: [{ translateY: notifAnim }],
-        backgroundColor: notif.type === "error" ? THEME_COLORS.error : THEME_COLORS.success 
-      }]}>
+      <Animated.View
+        style={[
+          styles.popup,
+          {
+            transform: [{ translateY: notifAnim }],
+            backgroundColor:
+              notif.type === "error"
+                ? THEME_COLORS.error
+                : THEME_COLORS.success,
+          },
+        ]}
+      >
         <Text style={styles.popupText}>{notif.msg}</Text>
       </Animated.View>
 
       {/* ALERTA DE ERROR DE LOGIN (gradiente rojo + blur, sin botón, 2 segundos) */}
       {loginError ? (
-        <Animated.View style={[styles.loginErrorAlert, { 
-          transform: [{ translateY: loginErrorAnim }],
-        }]}>
-          <BlurView 
-            intensity={90} 
-            tint={isDarkMode ? "dark" : "light"} 
+        <Animated.View
+          style={[
+            styles.loginErrorAlert,
+            {
+              transform: [{ translateY: loginErrorAnim }],
+            },
+          ]}
+        >
+          <BlurView
+            intensity={90}
+            tint={isDarkMode ? "dark" : "light"}
             style={styles.blurContainer}
           >
             <LinearGradient
@@ -199,65 +250,116 @@ export default function AuthScreen() {
               end={{ x: 1, y: 1 }}
               style={styles.errorGradient}
             >
-              <Text style={styles.errorText}>
-                {loginError}
-              </Text>
+              <Text style={styles.errorText}>{loginError}</Text>
             </LinearGradient>
           </BlurView>
         </Animated.View>
       ) : null}
 
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
           {/* HEADER DE MARCA */}
           <Animated.View style={[styles.header, { opacity: fadeAnim }]}>
             <Text style={[styles.brandName, { color: colors.text }]}>
               ACADEMY<Text style={{ color: THEME_COLORS.primary }}>PRO</Text>
             </Text>
-            <View style={[styles.badge, { backgroundColor: THEME_COLORS.primary + "15" }]}>
-              <Text style={[styles.badgeText, { color: THEME_COLORS.primary }]}>CURSOS DE PROGRAMACIÓN</Text>
+            <View
+              style={[
+                styles.badge,
+                { backgroundColor: THEME_COLORS.primary + "15" },
+              ]}
+            >
+              <Text style={[styles.badgeText, { color: THEME_COLORS.primary }]}>
+                CURSOS DE PROGRAMACIÓN
+              </Text>
             </View>
           </Animated.View>
 
           {/* TARJETA GLASSMORPHISM */}
-          <Animated.View style={[styles.card, { 
-            backgroundColor: colors.card, 
-            borderColor: colors.border,
-            transform: [{ translateY: slideAnim }]
-          }]}>
+          <Animated.View
+            style={[
+              styles.card,
+              {
+                backgroundColor: colors.card,
+                borderColor: colors.border,
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+          >
             <Text style={[styles.cardTitle, { color: colors.text }]}>
               {isRegister ? "CREAR CUENTA" : "INICIAR SESIÓN"}
             </Text>
 
-            {isRegister && renderInput("name", "person-outline", "NOMBRE COMPLETO")}
+            {isRegister &&
+              renderInput("name", "person-outline", "NOMBRE COMPLETO")}
             {renderInput("email", "mail-outline", "CORREO ELECTRÓNICO")}
-            {renderInput("password", "lock-closed-outline", "CONTRASEÑA", true, showPassword, setShowPassword)}
-            {isRegister && renderInput("confirmPassword", "shield-checkmark-outline", "CONFIRMAR", true, showConfirmPassword, setShowConfirmPassword)}
+            {renderInput(
+              "password",
+              "lock-closed-outline",
+              "CONTRASEÑA",
+              true,
+              showPassword,
+              setShowPassword,
+            )}
+            {isRegister &&
+              renderInput(
+                "confirmPassword",
+                "shield-checkmark-outline",
+                "CONFIRMAR",
+                true,
+                showConfirmPassword,
+                setShowConfirmPassword,
+              )}
 
-            <TouchableOpacity style={styles.actionButton} onPress={handleSubmit} disabled={authLoading}>
-              <LinearGradient 
-                colors={[THEME_COLORS.primary, THEME_COLORS.secondary]} 
-                start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={handleSubmit}
+              disabled={authLoading}
+            >
+              <LinearGradient
+                colors={[THEME_COLORS.primary, THEME_COLORS.secondary]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
                 style={styles.btnGradient}
               >
                 <Text style={styles.buttonText}>
-                  {authLoading ? "PROCESANDO..." : isRegister ? "REGISTRARME" : "ENTRAR"}
+                  {authLoading
+                    ? "PROCESANDO..."
+                    : isRegister
+                      ? "REGISTRARME"
+                      : "ENTRAR"}
                 </Text>
-                {!authLoading && <Ionicons name="arrow-forward" size={18} color="#FFF" />}
+                {!authLoading && (
+                  <Ionicons name="arrow-forward" size={18} color="#FFF" />
+                )}
               </LinearGradient>
             </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={styles.switchMode} 
+            <TouchableOpacity
+              style={styles.switchMode}
               onPress={() => {
                 setIsRegister(!isRegister);
-                setFormData({ email: "", password: "", confirmPassword: "", name: "" });
+                setFormData({
+                  email: "",
+                  password: "",
+                  confirmPassword: "",
+                  name: "",
+                });
               }}
             >
-              <Text style={[styles.switchText, { color: colors.textSecondary }]}>
+              <Text
+                style={[styles.switchText, { color: colors.textSecondary }]}
+              >
                 {isRegister ? "¿YA TIENES CUENTA? " : "¿ERES NUEVO? "}
-                <Text style={{ color: THEME_COLORS.primary, fontWeight: "900" }}>
+                <Text
+                  style={{ color: THEME_COLORS.primary, fontWeight: "900" }}
+                >
                   {isRegister ? "INICIA SESIÓN" : "CREAR CUENTA"}
                 </Text>
               </Text>
@@ -274,26 +376,73 @@ const styles = StyleSheet.create({
   scrollContent: { flexGrow: 1, padding: 30, justifyContent: "center" },
   header: { alignItems: "center", marginBottom: 50 },
   brandName: { fontSize: 34, fontWeight: "900", letterSpacing: 2 },
-  badge: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 8, marginTop: 10 },
+  badge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginTop: 10,
+  },
   badgeText: { fontSize: 10, fontWeight: "800", letterSpacing: 2 },
-  card: { borderRadius: 32, padding: 25, borderWidth: 1, elevation: 15, shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 20 },
-  cardTitle: { fontSize: 20, fontWeight: "900", textAlign: "center", marginBottom: 25, letterSpacing: 1 },
-  inputGroup: { flexDirection: "row", alignItems: "center", borderRadius: 16, paddingHorizontal: 15, height: 62, marginBottom: 15 },
+  card: {
+    borderRadius: 32,
+    padding: 25,
+    borderWidth: 1,
+    elevation: 15,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+  },
+  cardTitle: {
+    fontSize: 20,
+    fontWeight: "900",
+    textAlign: "center",
+    marginBottom: 25,
+    letterSpacing: 1,
+  },
+  inputGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 16,
+    paddingHorizontal: 15,
+    height: 62,
+    marginBottom: 15,
+  },
   input: { flex: 1, marginLeft: 12, fontSize: 14, fontWeight: "600" },
-  actionButton: { marginTop: 15, borderRadius: 18, overflow: "hidden", elevation: 5 },
-  btnGradient: { height: 62, flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 10 },
-  buttonText: { color: "#FFF", fontSize: 16, fontWeight: "900", letterSpacing: 1 },
+  actionButton: {
+    marginTop: 15,
+    borderRadius: 18,
+    overflow: "hidden",
+    elevation: 5,
+  },
+  btnGradient: {
+    height: 62,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 10,
+  },
+  buttonText: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "900",
+    letterSpacing: 1,
+  },
   switchMode: { marginTop: 25, alignItems: "center" },
   switchText: { fontSize: 13, fontWeight: "700" },
-  popup: { 
-    position: "absolute", 
-    left: 20, 
-    right: 20, 
-    zIndex: 9999, 
-    padding: 18, 
-    borderRadius: 20, 
+  popup: {
+    position: "absolute",
+    left: 20,
+    right: 20,
+    zIndex: 9999,
+    padding: 18,
+    borderRadius: 20,
   },
-  popupText: { color: "#FFF", fontWeight: "900", fontSize: 13, textAlign: "center" },
+  popupText: {
+    color: "#FFF",
+    fontWeight: "900",
+    fontSize: 13,
+    textAlign: "center",
+  },
 
   // ALERTA DE ERROR DE LOGIN (gradiente rojo + blur, se quita sola en 2s)
   loginErrorAlert: {

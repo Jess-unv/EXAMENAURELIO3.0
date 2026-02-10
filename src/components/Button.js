@@ -7,13 +7,13 @@ import {
   View,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { 
-  COLORS, 
-  FONT_SIZES, 
-  FONT_WEIGHTS, 
-  BORDER_RADIUS, 
-  SPACING 
+import {
+  FONT_SIZES,
+  FONT_WEIGHTS,
+  BORDER_RADIUS,
+  SPACING,
 } from '../constants/theme';
+import { useTheme } from '../context/ThemeContext';
 
 const Button = ({
   children,
@@ -28,34 +28,36 @@ const Button = ({
   textStyle,
   ...props
 }) => {
+  const { colors } = useTheme();
+
   const getVariantStyle = () => {
     switch (variant) {
       case 'default':
         return {
-          backgroundColor: COLORS.primary,
-          borderColor: COLORS.primary,
+          backgroundColor: colors.primary,
+          borderColor: colors.primary,
         };
       case 'secondary':
         return {
           backgroundColor: 'transparent',
-          borderColor: COLORS.primary,
+          borderColor: colors.primary,
           borderWidth: 2,
         };
       case 'outline':
         return {
           backgroundColor: 'transparent',
-          borderColor: COLORS.border,
+          borderColor: colors.border,
           borderWidth: 1,
         };
       case 'destructive':
         return {
-          backgroundColor: COLORS.destructive,
-          borderColor: COLORS.destructive,
+          backgroundColor: colors.destructive,
+          borderColor: colors.destructive,
         };
       case 'success':
         return {
-          backgroundColor: COLORS.success,
-          borderColor: COLORS.success,
+          backgroundColor: colors.success,
+          borderColor: colors.success,
         };
       case 'ghost':
         return {
@@ -64,8 +66,8 @@ const Button = ({
         };
       default:
         return {
-          backgroundColor: COLORS.primary,
-          borderColor: COLORS.primary,
+          backgroundColor: colors.primary,
+          borderColor: colors.primary,
         };
     }
   };
@@ -98,13 +100,13 @@ const Button = ({
   const getTextVariantStyle = () => {
     switch (variant) {
       case 'secondary':
-        return { color: COLORS.primary };
+        return { color: colors.primary };
       case 'outline':
-        return { color: COLORS.foreground };
+        return { color: colors.foreground };
       case 'ghost':
-        return { color: COLORS.foreground };
+        return { color: colors.foreground };
       default:
-        return { color: COLORS.primaryForeground };
+        return { color: colors.primaryForeground };
     }
   };
 
@@ -137,12 +139,12 @@ const Button = ({
     >
       {loading ? (
         <ActivityIndicator 
-          size="small" 
+            size="small"
           color={
             variant === 'secondary' || variant === 'outline' || variant === 'ghost'
-              ? COLORS.primary
-              : COLORS.primaryForeground
-          } 
+              ? colors.primary
+              : colors.primaryForeground
+          }
         />
       ) : (
         <View style={styles.content}>

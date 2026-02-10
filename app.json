@@ -27,7 +27,15 @@
     },
     "plugins": [
       "expo-font",
-      "react-native-video"
+      "react-native-video",
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.quickpay",
+          "enableGooglePay": true
+        }
+      ],
+      "expo-secure-store"
     ]
   }
 }

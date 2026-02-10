@@ -143,8 +143,13 @@ export default function AdminDashboard({ navigation }) {
       setDashboardStats((prev) => ({ ...prev, loading: true }));
       if (!user?.id) {
         setDashboardStats({
-          totalCourses: 0, publishedCourses: 0, draftCourses: 0,
-          totalEnrollments: 0, paidEnrollments: 0, freeEnrollments: 0, loading: false,
+          totalCourses: 0,
+          publishedCourses: 0,
+          draftCourses: 0,
+          totalEnrollments: 0,
+          paidEnrollments: 0,
+          freeEnrollments: 0,
+          loading: false,
         });
         return;
       }
@@ -157,7 +162,8 @@ export default function AdminDashboard({ navigation }) {
       if (coursesError) throw coursesError;
 
       const totalCourses = coursesData?.length || 0;
-      const publishedCourses = coursesData?.filter((c) => c.is_published).length || 0;
+      const publishedCourses =
+        coursesData?.filter((c) => c.is_published).length || 0;
       const draftCourses = totalCourses - publishedCourses;
 
       const { data: enrollmentsData, error: enrollError } = await supabase
@@ -168,12 +174,18 @@ export default function AdminDashboard({ navigation }) {
       if (enrollError) throw enrollError;
 
       const totalEnrollments = enrollmentsData?.length || 0;
-      const paidEnrollments = enrollmentsData?.filter((e) => e.price_paid > 0).length || 0;
+      const paidEnrollments =
+        enrollmentsData?.filter((e) => e.price_paid > 0).length || 0;
       const freeEnrollments = totalEnrollments - paidEnrollments;
 
       setDashboardStats({
-        totalCourses, publishedCourses, draftCourses,
-        totalEnrollments, paidEnrollments, freeEnrollments, loading: false,
+        totalCourses,
+        publishedCourses,
+        draftCourses,
+        totalEnrollments,
+        paidEnrollments,
+        freeEnrollments,
+        loading: false,
       });
     } catch (error) {
       console.error("Error cargando estadísticas:", error);
@@ -190,7 +202,14 @@ export default function AdminDashboard({ navigation }) {
   const handleLogout = () => {
     Alert.alert("Cerrar sesión", "¿Estás seguro?", [
       { text: "Cancelar", style: "cancel" },
-      { text: "Cerrar sesión", style: "destructive", onPress: async () => { await logout(); toggleMenu(false); } },
+      {
+        text: "Cerrar sesión",
+        style: "destructive",
+        onPress: async () => {
+          await logout();
+          toggleMenu(false);
+        },
+      },
     ]);
   };
 
@@ -198,140 +217,283 @@ export default function AdminDashboard({ navigation }) {
 
   return (
     <View style={[styles.mainWrapper, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor="transparent" translucent />
+      <StatusBar
+        barStyle={isDarkMode ? "light-content" : "dark-content"}
+        backgroundColor="transparent"
+        translucent
+      />
 
       {/* Animación de fondo */}
-      <Animated.View style={[styles.bgCircle, {
-        transform: [{ translateY: bgAnim1.interpolate({ inputRange: [0, 1], outputRange: [-20, 50] }) }],
-        top: 50, left: -40, backgroundColor: colors.primary, opacity: isDarkMode ? 0.08 : 0.12,
-      }]} />
+      <Animated.View
+        style={[
+          styles.bgCircle,
+          {
+            transform: [
+              {
+                translateY: bgAnim1.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [-20, 50],
+                }),
+              },
+            ],
+            top: 50,
+            left: -40,
+            backgroundColor: colors.primary,
+            opacity: isDarkMode ? 0.08 : 0.12,
+          },
+        ]}
+      />
 
-      <View style={[styles.headerContainer, { backgroundColor: colors.card, shadowColor: isDarkMode ? "#000" : "#64748b" }]}>
+      <View
+        style={[
+          styles.headerContainer,
+          {
+            backgroundColor: colors.card,
+            shadowColor: isDarkMode ? "#000" : "#64748b",
+          },
+        ]}
+      >
         <SafeAreaView>
           <View style={styles.headerContent}>
-            <TouchableOpacity onPress={() => toggleMenu(true)} style={styles.menuBtn}>
+            <TouchableOpacity
+              onPress={() => toggleMenu(true)}
+              style={styles.menuBtn}
+            >
               <Icon name="menu" size={32} color={colors.text} />
             </TouchableOpacity>
             <View style={styles.textContainer}>
-              <Text style={[styles.greet, { color: colors.textSecondary }]}>Panel de Administración</Text>
-              <Text style={[styles.userName, { color: colors.text }]}>{user?.name || "Administrador"}</Text>
+              <Text style={[styles.greet, { color: colors.textSecondary }]}>
+                Panel de Administración
+              </Text>
+              <Text style={[styles.userName, { color: colors.text }]}>
+                {user?.name || "Administrador"}
+              </Text>
             </View>
           </View>
         </SafeAreaView>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={[colors.primary]} />}>
-        
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scroll}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={[colors.primary]}
+          />
+        }
+      >
         {/* Tarjeta principal */}
-        <View style={[styles.statsCard, { backgroundColor: colors.card, borderLeftColor: colors.primary }]}>
+        <View
+          style={[
+            styles.statsCard,
+            { backgroundColor: colors.card, borderLeftColor: colors.primary },
+          ]}
+        >
           <View style={styles.statsHeaderRow}>
-            <Text style={[styles.statsTitle, { color: colors.textSecondary }]}>Resumen de tu plataforma</Text>
-            {dashboardStats.loading && <ActivityIndicator size="small" color={colors.primary} />}
+            <Text style={[styles.statsTitle, { color: colors.textSecondary }]}>
+              Resumen de tu plataforma
+            </Text>
+            {dashboardStats.loading && (
+              <ActivityIndicator size="small" color={colors.primary} />
+            )}
           </View>
           {!dashboardStats.loading && (
             <View style={styles.statsValueRow}>
               <View>
-                <Text style={[styles.bigAmount, { color: colors.text }]}>{formatNumber(dashboardStats.totalCourses)}</Text>
-                <Text style={[styles.statsSubtitle, { color: colors.textSecondary }]}>Cursos totales</Text>
+                <Text style={[styles.bigAmount, { color: colors.text }]}>
+                  {formatNumber(dashboardStats.totalCourses)}
+                </Text>
+                <Text
+                  style={[
+                    styles.statsSubtitle,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  Cursos totales
+                </Text>
               </View>
-              <Icon name="book-education-outline" size={40} color={colors.primary} opacity={0.2} />
+              <Icon
+                name="book-education-outline"
+                size={40}
+                color={colors.primary}
+                opacity={0.2}
+              />
             </View>
           )}
         </View>
 
-        {/* Mini estadísticas */}
-        <View style={styles.miniStats}>
-          <StatCard icon="publish" value={dashboardStats.publishedCourses} label="Publicados" color="#10b981" themeColors={colors} />
-          <StatCard icon="file-document-edit-outline" value={dashboardStats.draftCourses} label="Borradores" color="#f59e0b" themeColors={colors} />
-          <StatCard icon="account-multiple-check" value={dashboardStats.totalEnrollments} label="Inscripciones" color="#3b82f6" themeColors={colors} />
-        </View>
-
-        <View style={styles.additionalStats}>
-          <View style={[styles.additionalStatCard, { backgroundColor: colors.card }]}>
-            <Icon name="cash" size={24} color="#10b981" />
-            <View style={styles.additionalStatInfo}>
-              <Text style={[styles.additionalStatValue, { color: colors.text }]}>{formatNumber(dashboardStats.paidEnrollments)}</Text>
-              <Text style={[styles.additionalStatLabel, { color: colors.textSecondary }]}>Pagadas</Text>
-            </View>
-          </View>
-          <View style={[styles.additionalStatCard, { backgroundColor: colors.card }]}>
-            <Icon name="gift" size={24} color="#8b5cf6" />
-            <View style={styles.additionalStatInfo}>
-              <Text style={[styles.additionalStatValue, { color: colors.text }]}>{formatNumber(dashboardStats.freeEnrollments)}</Text>
-              <Text style={[styles.additionalStatLabel, { color: colors.textSecondary }]}>Gratis</Text>
-            </View>
-          </View>
-        </View>
-
         {/* Acciones rápidas */}
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Acciones rápidas</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>
+          Acciones rápidas
+        </Text>
         <View style={styles.row}>
-          <ActionButton icon="plus-box" label="Nuevo Curso" color="#10b981" bg="#ecfdf5" darkBg="#064e3b" onPress={() => navigation.navigate("AddCourse")} themeColors={colors} />
-          <ActionButton icon="account-group" label="Ver Alumnos" color={colors.primary} bg="#eff6ff" darkBg="#1e3a8a" onPress={() => navigation.navigate("AdminEnrollments")} themeColors={colors} />
+          <ActionButton
+            icon="plus-box"
+            label="Nuevo Curso"
+            color="#10b981"
+            bg="#ecfdf5"
+            darkBg="#064e3b"
+            onPress={() => navigation.navigate("AddCourse")}
+            themeColors={colors}
+          />
         </View>
 
         {/* Cursos Recientes */}
         <View style={styles.productsHeader}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Tus cursos ({myCourses.length})</Text>
-          <TouchableOpacity onPress={() => navigation.navigate("AdminCourses")} style={styles.viewAllButton}>
-            <Text style={[styles.viewAllText, { color: colors.primary }]}>Ver todos</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            Tus cursos ({myCourses.length})
+          </Text>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("AdminCourses")}
+            style={styles.viewAllButton}
+          >
+            <Text style={[styles.viewAllText, { color: colors.primary }]}>
+              Ver todos
+            </Text>
             <Icon name="chevron-right" size={16} color={colors.primary} />
           </TouchableOpacity>
         </View>
 
-        {loading ? <ActivityIndicator size="large" color={colors.primary} /> : 
-          myCourses.length === 0 ? (
-            <View style={[styles.emptyState, { backgroundColor: colors.card }]}>
-              <Icon name="book-education-outline" size={50} color={colors.textSecondary} />
-              <Text style={[styles.emptyStateTitle, { color: colors.text }]}>No tienes cursos aún</Text>
-              <TouchableOpacity style={[styles.emptyStateButton, { backgroundColor: colors.primary }]} onPress={() => navigation.navigate("AddCourse")}>
-                <Text style={styles.emptyStateButtonText}>Crear primer curso</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <View style={styles.grid}>
-              {myCourses.slice(0, 4).map((item) => (
-                <CourseItem key={item.id} item={item} themeColors={colors} onEdit={() => navigation.navigate("EditCourse", { courseId: item.id })} />
-              ))}
-            </View>
-          )
-        }
+        {loading ? (
+          <ActivityIndicator size="large" color={colors.primary} />
+        ) : myCourses.length === 0 ? (
+          <View style={[styles.emptyState, { backgroundColor: colors.card }]}>
+            <Icon
+              name="book-education-outline"
+              size={50}
+              color={colors.textSecondary}
+            />
+            <Text style={[styles.emptyStateTitle, { color: colors.text }]}>
+              No tienes cursos aún
+            </Text>
+            <TouchableOpacity
+              style={[
+                styles.emptyStateButton,
+                { backgroundColor: colors.primary },
+              ]}
+              onPress={() => navigation.navigate("AddCourse")}
+            >
+              <Text style={styles.emptyStateButtonText}>
+                Crear primer curso
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={styles.grid}>
+            {myCourses.slice(0, 4).map((item) => (
+              <CourseItem
+                key={item.id}
+                item={item}
+                themeColors={colors}
+                onEdit={() =>
+                  navigation.navigate("EditCourse", { courseId: item.id })
+                }
+              />
+            ))}
+          </View>
+        )}
       </ScrollView>
 
       {/* Drawer lateral (Menu completo agregado) */}
       {menuVisible && (
         <>
           <Animated.View style={[styles.overlay, { opacity: menuOpacity }]}>
-            <TouchableOpacity style={{ flex: 1 }} onPress={() => toggleMenu(false)} />
+            <TouchableOpacity
+              style={{ flex: 1 }}
+              onPress={() => toggleMenu(false)}
+            />
           </Animated.View>
-          <Animated.View style={[styles.drawer, { transform: [{ translateX: slideAnim }], backgroundColor: colors.card }]}>
+          <Animated.View
+            style={[
+              styles.drawer,
+              {
+                transform: [{ translateX: slideAnim }],
+                backgroundColor: colors.card,
+              },
+            ]}
+          >
             <SafeAreaView style={{ flex: 1 }}>
-              <View style={[styles.drawerHeader, { borderBottomColor: colors.border }]}>
-                <View style={[styles.dAvatar, { backgroundColor: colors.primary }]}>
+              <View
+                style={[
+                  styles.drawerHeader,
+                  { borderBottomColor: colors.border },
+                ]}
+              >
+                <View
+                  style={[styles.dAvatar, { backgroundColor: colors.primary }]}
+                >
                   <Text style={styles.dAvatarTxt}>{user?.name?.charAt(0)}</Text>
                 </View>
-                <Text style={[styles.dName, { color: colors.text }]}>{user?.name}</Text>
-                <Text style={[styles.dEmail, { color: colors.textSecondary }]}>{user?.email}</Text>
+                <Text style={[styles.dName, { color: colors.text }]}>
+                  {user?.name}
+                </Text>
+                <Text style={[styles.dEmail, { color: colors.textSecondary }]}>
+                  {user?.email}
+                </Text>
               </View>
 
               <View style={styles.dContent}>
                 {/* ENLACES COMPLETOS DEL APPNAVIGATOR */}
-                <DrawerLink icon="view-dashboard" label="Dashboard" onPress={() => toggleMenu(false)} themeColors={colors} />
-                <DrawerLink icon="book-multiple" label="Mis Cursos" onPress={() => { toggleMenu(false); navigation.navigate("AdminCourses"); }} themeColors={colors} />
-                <DrawerLink icon="account-group" label="Inscripciones" onPress={() => { toggleMenu(false); navigation.navigate("AdminEnrollments"); }} themeColors={colors} />
-                <DrawerLink icon="account-circle" label="Mi Perfil" onPress={() => { toggleMenu(false); navigation.navigate("AdminProfile"); }} themeColors={colors} />
+                <DrawerLink
+                  icon="view-dashboard"
+                  label="Dashboard"
+                  onPress={() => toggleMenu(false)}
+                  themeColors={colors}
+                />
+                <DrawerLink
+                  icon="book-multiple"
+                  label="Mis Cursos"
+                  onPress={() => {
+                    toggleMenu(false);
+                    navigation.navigate("AdminCourses");
+                  }}
+                  themeColors={colors}
+                />
+               
+                <DrawerLink
+                  icon="account-circle"
+                  label="Mi Perfil"
+                  onPress={() => {
+                    toggleMenu(false);
+                    navigation.navigate("AdminProfile");
+                  }}
+                  themeColors={colors}
+                />
 
                 <View style={styles.themeSwitchRow}>
-                   <View style={{ flexDirection: "row", alignItems: "center", gap: 15 }}>
-                    <Icon name={isDarkMode ? "weather-night" : "weather-sunny"} size={26} color={colors.primary} />
-                    <Text style={[styles.dLinkText, { color: colors.text }]}>Modo Oscuro</Text>
-                   </View>
-                   <Switch value={isDarkMode} onValueChange={toggleTheme} trackColor={{ false: "#cbd5e1", true: colors.primary }} />
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 15,
+                    }}
+                  >
+                    <Icon
+                      name={isDarkMode ? "weather-night" : "weather-sunny"}
+                      size={26}
+                      color={colors.primary}
+                    />
+                    <Text style={[styles.dLinkText, { color: colors.text }]}>
+                      Modo Oscuro
+                    </Text>
+                  </View>
+                  <Switch
+                    value={isDarkMode}
+                    onValueChange={toggleTheme}
+                    trackColor={{ false: "#cbd5e1", true: colors.primary }}
+                  />
                 </View>
               </View>
 
-              <TouchableOpacity style={[styles.logout, { backgroundColor: isDarkMode ? "#451a1a" : "#fff1f2" }]} onPress={handleLogout}>
+              <TouchableOpacity
+                style={[
+                  styles.logout,
+                  { backgroundColor: isDarkMode ? "#451a1a" : "#fff1f2" },
+                ]}
+                onPress={handleLogout}
+              >
                 <Icon name="logout" size={22} color="#ef4444" />
                 <Text style={styles.logoutTxt}>Cerrar Sesión</Text>
               </TouchableOpacity>
@@ -347,30 +509,74 @@ export default function AdminDashboard({ navigation }) {
 const StatCard = ({ icon, value, label, color, themeColors }) => (
   <View style={[styles.miniStatCard, { backgroundColor: themeColors.card }]}>
     <Icon name={icon} size={28} color={color} />
-    <Text style={[styles.miniStatValue, { color: themeColors.text }]}>{value}</Text>
-    <Text style={[styles.miniStatLabel, { color: themeColors.textSecondary }]}>{label}</Text>
+    <Text style={[styles.miniStatValue, { color: themeColors.text }]}>
+      {value}
+    </Text>
+    <Text style={[styles.miniStatLabel, { color: themeColors.textSecondary }]}>
+      {label}
+    </Text>
   </View>
 );
 
-const ActionButton = ({ icon, label, color, bg, darkBg, onPress, themeColors }) => (
-  <TouchableOpacity style={[styles.actionBtn, { backgroundColor: themeColors.card, borderColor: color }]} onPress={onPress}>
-    <View style={[styles.iconBox, { backgroundColor: themeColors.isDarkMode ? darkBg : bg }]}>
+const ActionButton = ({
+  icon,
+  label,
+  color,
+  bg,
+  darkBg,
+  onPress,
+  themeColors,
+}) => (
+  <TouchableOpacity
+    style={[
+      styles.actionBtn,
+      { backgroundColor: themeColors.card, borderColor: color },
+    ]}
+    onPress={onPress}
+  >
+    <View
+      style={[
+        styles.iconBox,
+        { backgroundColor: themeColors.isDarkMode ? darkBg : bg },
+      ]}
+    >
       <Icon name={icon} size={32} color={color} />
     </View>
-    <Text style={[styles.actionLabel, { color: themeColors.text }]}>{label}</Text>
+    <Text style={[styles.actionLabel, { color: themeColors.text }]}>
+      {label}
+    </Text>
   </TouchableOpacity>
 );
 
 const CourseItem = ({ item, themeColors, onEdit }) => (
   <View style={[styles.itemCard, { backgroundColor: themeColors.card }]}>
-    <View style={[styles.imgWrap, { backgroundColor: themeColors.isDarkMode ? "#2d2d2d" : "#f1f5f9" }]}>
-      {item.thumbnail_url ? <Image source={{ uri: item.thumbnail_url }} style={styles.img} /> : <Icon name="book" size={24} color="#ccc" />}
-      <TouchableOpacity style={[styles.editBtn, { backgroundColor: themeColors.primary }]} onPress={onEdit}>
+    <View
+      style={[
+        styles.imgWrap,
+        { backgroundColor: themeColors.isDarkMode ? "#2d2d2d" : "#f1f5f9" },
+      ]}
+    >
+      {item.thumbnail_url ? (
+        <Image source={{ uri: item.thumbnail_url }} style={styles.img} />
+      ) : (
+        <Icon name="book" size={24} color="#ccc" />
+      )}
+      <TouchableOpacity
+        style={[styles.editBtn, { backgroundColor: themeColors.primary }]}
+        onPress={onEdit}
+      >
         <Icon name="pencil" size={14} color="#fff" />
       </TouchableOpacity>
     </View>
-    <Text style={[styles.itemName, { color: themeColors.text }]} numberOfLines={1}>{item.title}</Text>
-    <Text style={styles.itemPrice}>{item.price > 0 ? `$${parseFloat(item.price).toFixed(2)}` : "Gratis"}</Text>
+    <Text
+      style={[styles.itemName, { color: themeColors.text }]}
+      numberOfLines={1}
+    >
+      {item.title}
+    </Text>
+    <Text style={styles.itemPrice}>
+      {item.price > 0 ? `$${parseFloat(item.price).toFixed(2)}` : "Gratis"}
+    </Text>
   </View>
 );
 
@@ -383,59 +589,224 @@ const DrawerLink = ({ icon, label, onPress, themeColors }) => (
 
 const styles = StyleSheet.create({
   mainWrapper: { flex: 1 },
-  bgCircle: { position: "absolute", width: 300, height: 300, borderRadius: 150 },
-  headerContainer: { borderBottomLeftRadius: 30, borderBottomRightRadius: 30, elevation: 5, paddingBottom: 15, zIndex: 10 },
-  headerContent: { flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingTop: Platform.OS === "android" ? 35 : 10 },
+  bgCircle: {
+    position: "absolute",
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+  },
+  headerContainer: {
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    elevation: 5,
+    paddingBottom: 15,
+    zIndex: 10,
+  },
+  headerContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingTop: Platform.OS === "android" ? 35 : 10,
+  },
   menuBtn: { padding: 5 },
   textContainer: { flex: 1, marginLeft: 15 },
   greet: { fontSize: 12, fontWeight: "600" },
   userName: { fontSize: 20, fontWeight: "900" },
   scroll: { padding: 20, paddingBottom: 40 },
-  statsCard: { borderRadius: 20, padding: 20, marginBottom: 15, borderLeftWidth: 4 },
-  statsHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 },
+  statsCard: {
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 15,
+    borderLeftWidth: 4,
+  },
+  statsHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
   statsTitle: { fontSize: 14, fontWeight: "600" },
-  statsValueRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  statsValueRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   bigAmount: { fontSize: 28, fontWeight: "900" },
   statsSubtitle: { fontSize: 12, marginTop: 4 },
-  miniStats: { flexDirection: "row", justifyContent: "space-between", marginBottom: 15, gap: 10 },
-  miniStatCard: { flex: 1, borderRadius: 12, padding: 12, alignItems: "center", elevation: 1 },
-  miniStatValue: { fontSize: 18, fontWeight: "800", marginTop: 6, textAlign: "center" },
+  miniStats: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 15,
+    gap: 10,
+  },
+  miniStatCard: {
+    flex: 1,
+    borderRadius: 12,
+    padding: 12,
+    alignItems: "center",
+    elevation: 1,
+  },
+  miniStatValue: {
+    fontSize: 18,
+    fontWeight: "800",
+    marginTop: 6,
+    textAlign: "center",
+  },
   miniStatLabel: { fontSize: 11, marginTop: 4, textAlign: "center" },
   additionalStats: { flexDirection: "row", gap: 10, marginBottom: 20 },
-  additionalStatCard: { flex: 1, borderRadius: 15, padding: 15, flexDirection: "row", alignItems: "center", elevation: 2, gap: 12 },
+  additionalStatCard: {
+    flex: 1,
+    borderRadius: 15,
+    padding: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    elevation: 2,
+    gap: 12,
+  },
   additionalStatInfo: { flex: 1 },
   additionalStatValue: { fontSize: 18, fontWeight: "800", marginBottom: 2 },
   additionalStatLabel: { fontSize: 12 },
   row: { flexDirection: "row", gap: 15, marginBottom: 20 },
-  actionBtn: { flex: 1, borderRadius: 15, padding: 15, alignItems: "center", borderWidth: 1, elevation: 1 },
-  iconBox: { width: 50, height: 50, borderRadius: 12, justifyContent: "center", alignItems: "center", marginBottom: 8 },
+  actionBtn: {
+    flex: 1,
+    borderRadius: 15,
+    padding: 15,
+    alignItems: "center",
+    borderWidth: 1,
+    elevation: 1,
+  },
+  iconBox: {
+    width: 50,
+    height: 50,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 8,
+  },
   actionLabel: { fontWeight: "700", fontSize: 12, textAlign: "center" },
-  productsHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 15 },
+  productsHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 15,
+  },
   sectionTitle: { fontSize: 16, fontWeight: "800" },
   viewAllButton: { paddingVertical: 4, paddingHorizontal: 8 },
   viewAllText: { fontSize: 13, fontWeight: "700" },
-  grid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" },
-  itemCard: { width: (width - 55) / 2, borderRadius: 15, padding: 12, marginBottom: 15, elevation: 1 },
-  imgWrap: { width: "100%", height: 100, borderRadius: 12, justifyContent: "center", alignItems: "center", overflow: "hidden", position: "relative", marginBottom: 10 },
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+  },
+  itemCard: {
+    width: (width - 55) / 2,
+    borderRadius: 15,
+    padding: 12,
+    marginBottom: 15,
+    elevation: 1,
+  },
+  imgWrap: {
+    width: "100%",
+    height: 100,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
+    position: "relative",
+    marginBottom: 10,
+  },
   img: { width: "100%", height: "100%" },
-  editBtn: { position: "absolute", top: 6, right: 6, padding: 5, borderRadius: 6 },
-  itemName: { fontSize: 13, fontWeight: "700", marginBottom: 4, height: 36, lineHeight: 18 },
-  itemPrice: { fontSize: 15, fontWeight: "900", marginBottom: 2, color: "#10b981" },
-  emptyState: { borderRadius: 15, padding: 30, alignItems: "center", marginBottom: 20, elevation: 1 },
-  emptyStateTitle: { fontSize: 16, fontWeight: "700", marginTop: 15, marginBottom: 8 },
-  emptyStateButton: { paddingHorizontal: 20, paddingVertical: 12, borderRadius: 10 },
+  editBtn: {
+    position: "absolute",
+    top: 6,
+    right: 6,
+    padding: 5,
+    borderRadius: 6,
+  },
+  itemName: {
+    fontSize: 13,
+    fontWeight: "700",
+    marginBottom: 4,
+    height: 36,
+    lineHeight: 18,
+  },
+  itemPrice: {
+    fontSize: 15,
+    fontWeight: "900",
+    marginBottom: 2,
+    color: "#10b981",
+  },
+  emptyState: {
+    borderRadius: 15,
+    padding: 30,
+    alignItems: "center",
+    marginBottom: 20,
+    elevation: 1,
+  },
+  emptyStateTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    marginTop: 15,
+    marginBottom: 8,
+  },
+  emptyStateButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 10,
+  },
   emptyStateButtonText: { color: "#FFF", fontWeight: "700", fontSize: 14 },
-  overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.6)", zIndex: 1000 },
-  drawer: { position: "absolute", left: 0, top: 0, bottom: 0, width: 280, zIndex: 1001, padding: 25 },
-  drawerHeader: { paddingVertical: 20, borderBottomWidth: 1, marginBottom: 20, alignItems: "center" },
-  dAvatar: { width: 60, height: 60, borderRadius: 20, justifyContent: "center", alignItems: "center", marginBottom: 15 },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    zIndex: 1000,
+  },
+  drawer: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 280,
+    zIndex: 1001,
+    padding: 25,
+  },
+  drawerHeader: {
+    paddingVertical: 20,
+    borderBottomWidth: 1,
+    marginBottom: 20,
+    alignItems: "center",
+  },
+  dAvatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 15,
+  },
   dAvatarTxt: { color: "#fff", fontSize: 24, fontWeight: "bold" },
   dName: { fontSize: 18, fontWeight: "900", textAlign: "center" },
   dEmail: { fontSize: 13, textAlign: "center", marginBottom: 10 },
   dContent: { flex: 1 },
-  dLink: { flexDirection: "row", alignItems: "center", paddingVertical: 12, gap: 15 },
-  themeSwitchRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 15 },
+  dLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    gap: 15,
+  },
+  themeSwitchRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 15,
+  },
   dLinkText: { fontSize: 16, fontWeight: "700" },
-  logout: { flexDirection: "row", alignItems: "center", gap: 10, padding: 15, borderRadius: 15, marginTop: 20 },
+  logout: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    padding: 15,
+    borderRadius: 15,
+    marginTop: 20,
+  },
   logoutTxt: { color: "#ef4444", fontWeight: "800" },
 });

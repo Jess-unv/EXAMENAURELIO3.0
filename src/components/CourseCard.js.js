@@ -8,35 +8,36 @@ import {
   Animated,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { 
-  COLORS, 
-  FONT_SIZES, 
-  FONT_WEIGHTS, 
-  BORDER_RADIUS, 
-  SHADOWS, 
-  SPACING 
+import {
+  FONT_SIZES,
+  FONT_WEIGHTS,
+  BORDER_RADIUS,
+  SHADOWS,
+  SPACING,
 } from '../constants/theme';
+import { useTheme } from '../context/ThemeContext';
 
 const OrderItem = ({ order, onPress, onStatusChange, isProvider = false }) => {
   const [expanded, setExpanded] = useState(false);
   const heightAnim = useState(new Animated.Value(80))[0];
+  const { colors } = useTheme();
 
   const statusConfig = {
     pending: {
       label: 'Pendiente',
-      color: COLORS.statusPending,
+      color: colors.warning,
       bgColor: '#FEF3C7',
       icon: 'pending',
     },
     paid: {
       label: 'Pagado',
-      color: COLORS.statusPaid,
+      color: colors.success,
       bgColor: '#D1FAE5',
       icon: 'check-circle',
     },
     processing: {
       label: 'En proceso',
-      color: COLORS.statusProcessing,
+      color: colors.info,
       bgColor: '#DBEAFE',
       icon: 'settings',
     },
@@ -48,13 +49,13 @@ const OrderItem = ({ order, onPress, onStatusChange, isProvider = false }) => {
     },
     delivered: {
       label: 'Entregado',
-      color: COLORS.statusDelivered,
+      color: colors.secondary,
       bgColor: '#DCFCE7',
       icon: 'done-all',
     },
     cancelled: {
       label: 'Cancelado',
-      color: COLORS.destructive,
+      color: colors.destructive,
       bgColor: '#FEE2E2',
       icon: 'cancel',
     },
@@ -131,7 +132,7 @@ const OrderItem = ({ order, onPress, onStatusChange, isProvider = false }) => {
             />
           ) : (
             <View style={styles.productIcon}>
-              <Icon name="inventory" size={24} color={COLORS.mutedForeground} />
+              <Icon name="inventory" size={24} color={colors.mutedForeground} />
             </View>
           )}
           
@@ -156,21 +157,21 @@ const OrderItem = ({ order, onPress, onStatusChange, isProvider = false }) => {
         {expanded && (
           <View style={styles.expandedContent}>
             <View style={styles.detailRow}>
-              <Icon name="person" size={16} color={COLORS.mutedForeground} />
+              <Icon name="person" size={16} color={colors.mutedForeground} />
               <Text style={styles.detailText}>
                 {isProvider ? order.clientName : order.providerName}
               </Text>
             </View>
             
             <View style={styles.detailRow}>
-              <Icon name="phone" size={16} color={COLORS.mutedForeground} />
+              <Icon name="phone" size={16} color={colors.mutedForeground} />
               <Text style={styles.detailText}>
                 {order.phone || 'No especificado'}
               </Text>
             </View>
             
             <View style={styles.detailRow}>
-              <Icon name="location-on" size={16} color={COLORS.mutedForeground} />
+              <Icon name="location-on" size={16} color={colors.mutedForeground} />
               <Text style={styles.detailText}>
                 {order.address || 'Dirección no especificada'}
               </Text>
@@ -183,7 +184,7 @@ const OrderItem = ({ order, onPress, onStatusChange, isProvider = false }) => {
                   style={[styles.actionButton, styles.acceptButton]}
                   onPress={() => onStatusChange(order.id, 'processing')}
                 >
-                  <Icon name="check" size={16} color={COLORS.primaryForeground} />
+                  <Icon name="check" size={16} color={colors.primaryForeground} />
                   <Text style={styles.acceptButtonText}>Aceptar</Text>
                 </TouchableOpacity>
                 
@@ -191,7 +192,7 @@ const OrderItem = ({ order, onPress, onStatusChange, isProvider = false }) => {
                   style={[styles.actionButton, styles.cancelButton]}
                   onPress={() => onStatusChange(order.id, 'cancelled')}
                 >
-                  <Icon name="close" size={16} color={COLORS.destructiveForeground} />
+                  <Icon name="close" size={16} color={colors.destructiveForeground} />
                   <Text style={styles.cancelButtonText}>Rechazar</Text>
                 </TouchableOpacity>
               </View>
@@ -203,7 +204,7 @@ const OrderItem = ({ order, onPress, onStatusChange, isProvider = false }) => {
                 onPress={() => onPress(order.id)}
               >
                 <Text style={styles.trackButtonText}>Seguir pedido</Text>
-                <Icon name="chevron-right" size={16} color={COLORS.primary} />
+                <Icon name="chevron-right" size={16} color={colors.primary} />
               </TouchableOpacity>
             )}
           </View>
@@ -214,7 +215,7 @@ const OrderItem = ({ order, onPress, onStatusChange, isProvider = false }) => {
           <Icon 
             name={expanded ? 'expand-less' : 'expand-more'} 
             size={20} 
-            color={COLORS.mutedForeground} 
+            color={colors.mutedForeground} 
           />
         </View>
       </TouchableOpacity>
@@ -228,7 +229,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.sm,
   },
   card: {
-    backgroundColor: COLORS.card,
+    backgroundColor: colors.card,
     borderRadius: BORDER_RADIUS.lg,
     padding: SPACING.md,
     ...SHADOWS.md,
@@ -245,12 +246,12 @@ const styles = StyleSheet.create({
   orderId: {
     fontSize: FONT_SIZES.sm,
     fontWeight: FONT_WEIGHTS.bold,
-    color: COLORS.foreground,
+    color: colors.foreground,
     marginBottom: SPACING.xs,
   },
   date: {
     fontSize: FONT_SIZES.xs,
-    color: COLORS.mutedForeground,
+    color: colors.mutedForeground,
   },
   statusBadge: {
     flexDirection: 'row',
@@ -272,14 +273,14 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: BORDER_RADIUS.sm,
-    backgroundColor: COLORS.muted,
+    backgroundColor: colors.muted,
     marginRight: SPACING.sm,
   },
   productIcon: {
     width: 40,
     height: 40,
     borderRadius: BORDER_RADIUS.sm,
-    backgroundColor: COLORS.muted,
+    backgroundColor: colors.muted,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: SPACING.sm,
@@ -290,29 +291,29 @@ const styles = StyleSheet.create({
   productName: {
     fontSize: FONT_SIZES.sm,
     fontWeight: FONT_WEIGHTS.medium,
-    color: COLORS.foreground,
+    color: colors.foreground,
     marginBottom: SPACING.xs,
   },
   clientName: {
     fontSize: FONT_SIZES.xs,
-    color: COLORS.mutedForeground,
+    color: colors.mutedForeground,
     marginBottom: SPACING.xs,
   },
   quantity: {
     fontSize: FONT_SIZES.xs,
-    color: COLORS.mutedForeground,
+    color: colors.mutedForeground,
   },
   total: {
     fontSize: FONT_SIZES.lg,
     fontWeight: FONT_WEIGHTS.bold,
-    color: COLORS.primary,
+    color: colors.primary,
     marginLeft: SPACING.sm,
   },
   expandedContent: {
     marginTop: SPACING.md,
     paddingTop: SPACING.md,
     borderTopWidth: 1,
-    borderTopColor: COLORS.border,
+    borderTopColor: colors.border,
   },
   detailRow: {
     flexDirection: 'row',
@@ -322,7 +323,7 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: FONT_SIZES.sm,
-    color: COLORS.foreground,
+    color: colors.foreground,
     flex: 1,
   },
   actionButtons: {
@@ -340,18 +341,18 @@ const styles = StyleSheet.create({
     gap: SPACING.xs,
   },
   acceptButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
   },
   cancelButton: {
-    backgroundColor: COLORS.destructive,
+    backgroundColor: colors.destructive,
   },
   acceptButtonText: {
-    color: COLORS.primaryForeground,
+    color: colors.primaryForeground,
     fontSize: FONT_SIZES.sm,
     fontWeight: FONT_WEIGHTS.medium,
   },
   cancelButtonText: {
-    color: COLORS.destructiveForeground,
+    color: colors.destructiveForeground,
     fontSize: FONT_SIZES.sm,
     fontWeight: FONT_WEIGHTS.medium,
   },
@@ -359,15 +360,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.card,
+    backgroundColor: colors.card,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: colors.border,
     paddingVertical: SPACING.sm,
     borderRadius: BORDER_RADIUS.md,
     marginTop: SPACING.md,
   },
   trackButtonText: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontSize: FONT_SIZES.sm,
     fontWeight: FONT_WEIGHTS.medium,
     marginRight: SPACING.xs,

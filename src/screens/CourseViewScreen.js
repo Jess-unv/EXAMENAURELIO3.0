@@ -13,6 +13,7 @@ import {
   Animated,
   Alert,
   Platform,
+  Modal,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useAuth } from "../context/AuthContext";
@@ -70,8 +71,6 @@ export default function CourseViewScreen({ route, navigation }) {
       if (enrollData) {
         setEnrollment(enrollData);
         setProgress(enrollData.progress || 0);
-        // Suponiendo que guardas las lecciones completadas como array en un campo o derivado
-        // Por simplicidad, asumimos que completas secuencialmente
       }
 
       Animated.timing(fadeAnim, {
@@ -88,14 +87,16 @@ export default function CourseViewScreen({ route, navigation }) {
   };
 
   const markLessonComplete = async (lessonIndex) => {
-    if (!enrollment) return;
+    if (!enrollment || lessonIndex === -1) return;
 
     try {
       const newCompleted = [...completedLessons, lessonIndex];
-      const totalLessons = course.lessons?.length || 1;
-      const newProgress = Math.min(100, Math.round((newCompleted.length / totalLessons) * 100));
+      const totalLessons = course.course_lessons?.length || 1; // ← Usa course_lessons (tu schema real)
+      const newProgress = Math.min(
+        100,
+        Math.round((newCompleted.length / totalLessons) * 100),
+      );
 
-      // Actualizar en Supabase
       const { error } = await supabase
         .from("enrollments")
         .update({
@@ -123,16 +124,26 @@ export default function CourseViewScreen({ route, navigation }) {
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.primary} style={{ flex: 1 }} />
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: colors.background }]}
+      >
+        <ActivityIndicator
+          size="large"
+          color={colors.primary}
+          style={{ flex: 1 }}
+        />
       </SafeAreaView>
     );
   }
 
   if (!course) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-        <Text style={{ color: colors.text, textAlign: "center", marginTop: 50 }}>
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: colors.background }]}
+      >
+        <Text
+          style={{ color: colors.text, textAlign: "center", marginTop: 50 }}
+        >
           Curso no encontrado o no estás inscrito
         </Text>
       </SafeAreaView>
@@ -140,27 +151,43 @@ export default function CourseViewScreen({ route, navigation }) {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
       <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Header del curso */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+          >
             <Icon name="arrow-left" size={28} color={colors.text} />
           </TouchableOpacity>
-          <Text style={[styles.courseTitle, { color: colors.text }]}>{course.title}</Text>
+          <Text style={[styles.courseTitle, { color: colors.text }]}>
+            {course.title}
+          </Text>
         </View>
 
         {/* Barra de progreso */}
         <View style={[styles.progressCard, { backgroundColor: colors.card }]}>
           <View style={styles.progressHeader}>
-            <Text style={[styles.progressLabel, { color: colors.textSecondary }]}>Progreso del curso</Text>
+            <Text
+              style={[styles.progressLabel, { color: colors.textSecondary }]}
+            >
+              Progreso del curso
+            </Text>
             <Text style={[styles.progressPercent, { color: colors.primary }]}>
               {progress}%
             </Text>
           </View>
-          <View style={[styles.progressBarContainer, { backgroundColor: colors.border }]}>
+          <View
+            style={[
+              styles.progressBarContainer,
+              { backgroundColor: colors.border },
+            ]}
+          >
             <Animated.View
               style={[
                 styles.progressBar,
@@ -172,16 +199,19 @@ export default function CourseViewScreen({ route, navigation }) {
             />
           </View>
           <Text style={[styles.progressText, { color: colors.textSecondary }]}>
-            {completedLessons.length} de {course.lessons?.length || 0} lecciones completadas
+            {completedLessons.length} de {course.course_lessons?.length || 0}{" "}
+            lecciones completadas
           </Text>
         </View>
 
         {/* Lista de lecciones */}
         <View style={[styles.lessonsCard, { backgroundColor: colors.card }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Lecciones</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            Lecciones
+          </Text>
 
-          {course.lessons?.length > 0 ? (
-            course.lessons.map((lesson, index) => (
+          {course.course_lessons?.length > 0 ? (
+            course.course_lessons.map((lesson, index) => (
               <TouchableOpacity
                 key={index}
                 style={[
@@ -192,10 +222,14 @@ export default function CourseViewScreen({ route, navigation }) {
                 disabled={isLessonCompleted(index)}
               >
                 <View style={styles.lessonLeft}>
-                  <View style={[
-                    styles.lessonNumber,
-                    isLessonCompleted(index) && { backgroundColor: "#10b981" }
-                  ]}>
+                  <View
+                    style={[
+                      styles.lessonNumber,
+                      isLessonCompleted(index) && {
+                        backgroundColor: "#10b981",
+                      },
+                    ]}
+                  >
                     {isLessonCompleted(index) ? (
                       <Icon name="check" size={16} color="#fff" />
                     ) : (
@@ -203,22 +237,35 @@ export default function CourseViewScreen({ route, navigation }) {
                     )}
                   </View>
                   <View style={styles.lessonInfo}>
-                    <Text style={[
-                      styles.lessonTitle,
-                      { color: isLessonCompleted(index) ? "#10b981" : colors.text }
-                    ]}>
+                    <Text
+                      style={[
+                        styles.lessonTitle,
+                        {
+                          color: isLessonCompleted(index)
+                            ? "#10b981"
+                            : colors.text,
+                        },
+                      ]}
+                    >
                       {lesson.title}
                     </Text>
-                    {lesson.duration_min && (
-                      <Text style={[styles.lessonMeta, { color: colors.textSecondary }]}>
-                        {lesson.duration_min} min
+                    {lesson.duration && (
+                      <Text
+                        style={[
+                          styles.lessonMeta,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        {lesson.duration} min
                       </Text>
                     )}
                   </View>
                 </View>
 
                 <Icon
-                  name={isLessonCompleted(index) ? "check-circle" : "play-circle"}
+                  name={
+                    isLessonCompleted(index) ? "check-circle" : "play-circle"
+                  }
                   size={28}
                   color={isLessonCompleted(index) ? "#10b981" : colors.primary}
                 />
@@ -235,7 +282,12 @@ export default function CourseViewScreen({ route, navigation }) {
         {progress === 100 && (
           <TouchableOpacity
             style={[styles.certificateButton, { backgroundColor: "#8b5cf6" }]}
-            onPress={() => Alert.alert("Certificado", "¡Felicidades! Tu certificado está listo (implementar descarga)")}
+            onPress={() =>
+              Alert.alert(
+                "Certificado",
+                "¡Felicidades! Tu certificado está listo (implementar descarga)",
+              )
+            }
           >
             <Icon name="certificate" size={24} color="#fff" />
             <Text style={styles.certificateText}>Obtener Certificado</Text>
@@ -251,7 +303,12 @@ export default function CourseViewScreen({ route, navigation }) {
         onRequestClose={() => setSelectedLesson(null)}
       >
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
+          <View
+            style={[
+              styles.modalContent,
+              { backgroundColor: colors.background },
+            ]}
+          >
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.text }]}>
                 {selectedLesson?.title}
@@ -263,9 +320,15 @@ export default function CourseViewScreen({ route, navigation }) {
 
             {/* Reproductor de video */}
             {selectedLesson?.video_url ? (
-              selectedLesson.video_url.includes("youtube.com") || selectedLesson.video_url.includes("youtu.be") ? (
-                // Para YouTube puedes usar WebView o un componente específico
-                <Text style={{ color: colors.text, textAlign: "center", padding: 20 }}>
+              selectedLesson.video_url.includes("youtube.com") ||
+              selectedLesson.video_url.includes("youtu.be") ? (
+                <Text
+                  style={{
+                    color: colors.text,
+                    textAlign: "center",
+                    padding: 20,
+                  }}
+                >
                   Video de YouTube: {selectedLesson.video_url}
                   {"\n\n"}
                   (Implementa WebView o react-native-youtube-iframe aquí)
@@ -277,9 +340,12 @@ export default function CourseViewScreen({ route, navigation }) {
                   controls={true}
                   resizeMode="contain"
                   onEnd={() => {
-                    // Opcional: marcar como completada al finalizar
-                    if (!isLessonCompleted(course.lessons.indexOf(selectedLesson))) {
-                      markLessonComplete(course.lessons.indexOf(selectedLesson));
+                    const lessons = course.course_lessons || [];
+                    const index = lessons.findIndex(
+                      (l) => l.id === selectedLesson.id,
+                    );
+                    if (index !== -1 && !isLessonCompleted(index)) {
+                      markLessonComplete(index);
                     }
                   }}
                 />
@@ -287,23 +353,42 @@ export default function CourseViewScreen({ route, navigation }) {
             ) : (
               <View style={styles.noVideo}>
                 <Icon name="video-off" size={60} color={colors.textSecondary} />
-                <Text style={[styles.noVideoText, { color: colors.textSecondary }]}>
+                <Text
+                  style={[styles.noVideoText, { color: colors.textSecondary }]}
+                >
                   No hay video disponible para esta lección
                 </Text>
               </View>
             )}
 
             {/* Botón de completar */}
-            {!isLessonCompleted(course.lessons.indexOf(selectedLesson)) && (
+            {(() => {
+              const lessons = course.course_lessons || [];
+              const index = lessons.findIndex(
+                (l) => l.id === selectedLesson?.id,
+              );
+              return index !== -1 && !isLessonCompleted(index);
+            })() && (
               <TouchableOpacity
-                style={[styles.completeButton, { backgroundColor: colors.primary }]}
+                style={[
+                  styles.completeButton,
+                  { backgroundColor: colors.primary },
+                ]}
                 onPress={() => {
-                  markLessonComplete(course.lessons.indexOf(selectedLesson));
-                  setSelectedLesson(null);
+                  const lessons = course.course_lessons || [];
+                  const index = lessons.findIndex(
+                    (l) => l.id === selectedLesson.id,
+                  );
+                  if (index !== -1) {
+                    markLessonComplete(index);
+                    setSelectedLesson(null);
+                  }
                 }}
               >
                 <Icon name="check" size={20} color="#fff" />
-                <Text style={styles.completeButtonText}>Marcar como completada</Text>
+                <Text style={styles.completeButtonText}>
+                  Marcar como completada
+                </Text>
               </TouchableOpacity>
             )}
           </View>

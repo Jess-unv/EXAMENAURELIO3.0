@@ -1,8 +1,6 @@
-// src/api/orders.js - VERSIÓN ACTUALIZADA
 import { supabase } from '../utils/supabase';
 
 export const ordersAPI = {
-  // Generar número de pedido único
   generateOrderNumber() {
     const now = new Date();
     const year = now.getFullYear();
@@ -12,7 +10,6 @@ export const ordersAPI = {
     return `ORD-${year}${month}${day}-${random}`;
   },
 
-  // Crear un nuevo pedido - VERSIÓN MEJORADA
   async createOrder(orderData, items) {
     try {
       console.log('Creando pedido con datos:', { 
@@ -22,11 +19,9 @@ export const ordersAPI = {
         providerId: orderData.provider_id
       });
 
-      // 1. Generar número de pedido único
       const orderNumber = this.generateOrderNumber();
       console.log('Número de pedido generado:', orderNumber);
 
-      // 2. Crear el pedido en la tabla orders
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert([{
@@ -54,7 +49,6 @@ export const ordersAPI = {
 
       console.log('Pedido creado en orders:', order.id);
 
-      // 3. Verificar que los items tengan datos necesarios
       const orderItems = items.map(item => {
         if (!item.id) {
           throw new Error(`Producto sin ID: ${item.name}`);
@@ -78,7 +72,6 @@ export const ordersAPI = {
 
       console.log('Creando items del pedido:', orderItems.length);
 
-      // 4. Insertar items del pedido
       const { error: itemsError } = await supabase
         .from('order_items')
         .insert(orderItems);
@@ -90,11 +83,9 @@ export const ordersAPI = {
 
       console.log('Order_items creados exitosamente');
 
-      // 5. Reducir stock de productos (solo si hay stock disponible)
       console.log('Reduciendo stock de productos...');
       for (const item of items) {
         try {
-          // Primero obtener el stock actual
           const { data: product } = await supabase
             .from('products')
             .select('stock')
@@ -114,7 +105,6 @@ export const ordersAPI = {
 
             if (stockError) {
               console.error(`Error actualizando stock del producto ${item.id}:`, stockError);
-              // Continuamos con el siguiente producto, no detenemos el proceso
             } else {
               console.log(`Stock actualizado para producto ${item.id}: ${product.stock} -> ${newStock}`);
             }
@@ -123,11 +113,9 @@ export const ordersAPI = {
           }
         } catch (stockErr) {
           console.error(`Error procesando stock para producto ${item.id}:`, stockErr);
-          // Continuamos con el siguiente producto
         }
       }
 
-      // 6. Obtener el pedido completo con relaciones
       const { data: completeOrder, error: fetchError } = await supabase
         .from('orders')
         .select(`
@@ -144,7 +132,6 @@ export const ordersAPI = {
 
       if (fetchError) {
         console.error('Error obteniendo pedido completo:', fetchError);
-        // Devolvemos el pedido básico si no podemos obtener las relaciones
         return { 
           success: true, 
           order: {
@@ -169,7 +156,6 @@ export const ordersAPI = {
     }
   },
 
-  // Obtener pedidos del cliente
   async getClientOrders(clientId) {
     try {
       const { data, error } = await supabase
@@ -187,7 +173,6 @@ export const ordersAPI = {
 
       if (error) throw error;
       
-      // Formatear los datos para mayor consistencia
       const formattedOrders = (data || []).map(order => ({
         ...order,
         orderId: order.order_number || order.id,
@@ -220,7 +205,6 @@ export const ordersAPI = {
     }
   },
 
-  // Obtener pedidos del proveedor
   async getProviderOrders(providerId) {
     try {
       const { data, error } = await supabase
@@ -238,7 +222,6 @@ export const ordersAPI = {
 
       if (error) throw error;
       
-      // Formatear los datos para mayor consistencia
       const formattedOrders = (data || []).map(order => ({
         ...order,
         orderId: order.order_number || order.id,
@@ -270,7 +253,6 @@ export const ordersAPI = {
     }
   },
 
-  // Obtener pedido por ID
   async getOrderById(orderId) {
     try {
       const { data, error } = await supabase
@@ -329,7 +311,6 @@ export const ordersAPI = {
     }
   },
 
-  // Actualizar estado del pedido
   async updateOrderStatus(orderId, status) {
     try {
       // Validar que el estado sea válido
@@ -364,10 +345,8 @@ export const ordersAPI = {
     }
   },
 
-  // Cancelar pedido
   async cancelOrder(orderId, reason = '') {
     try {
-      // 1. Obtener el pedido actual
       const { data: order, error: fetchError } = await supabase
         .from('orders')
         .select('*')
@@ -376,7 +355,6 @@ export const ordersAPI = {
 
       if (fetchError) throw new Error('Pedido no encontrado');
 
-      // 2. Verificar si es cancelable
       const now = new Date();
       const cancelableUntil = new Date(order.cancelable_until);
 
@@ -388,7 +366,6 @@ export const ordersAPI = {
         throw new Error('Solo puedes cancelar pedidos pendientes o pagados');
       }
 
-      // 3. Actualizar estado del pedido
       const { data, error: updateError } = await supabase
         .from('orders')
         .update({
@@ -402,7 +379,6 @@ export const ordersAPI = {
 
       if (updateError) throw updateError;
 
-      // 4. Restaurar stock de productos
       const { data: items } = await supabase
         .from('order_items')
         .select('product_id, quantity')
@@ -420,7 +396,6 @@ export const ordersAPI = {
               .eq('id', item.product_id);
           } catch (stockErr) {
             console.error(`Error restaurando stock para producto ${item.product_id}:`, stockErr);
-            // Continuamos aunque haya error en un producto
           }
         }
       }
@@ -439,7 +414,6 @@ export const ordersAPI = {
     }
   },
 
-  // Suscribirse a cambios en tiempo real
   subscribeToOrders(userId, userRole, callback) {
     try {
       const channel = supabase
@@ -463,7 +437,6 @@ export const ordersAPI = {
           console.log(`Suscripción a pedidos: ${status}`);
         });
 
-      // Devolver función para desuscribirse
       return () => {
         console.log('Desuscribiendo de cambios en pedidos');
         supabase.removeChannel(channel);

@@ -1,8 +1,6 @@
-// src/api/courses.js
 import { supabase } from '../utils/supabase';
 
 export const coursesAPI = {
-  // Obtener todos los cursos publicados
   async getAllPublishedCourses() {
     try {
       const { data, error } = await supabase
@@ -24,7 +22,6 @@ export const coursesAPI = {
     }
   },
 
-  // Obtener cursos por categoría
   async getCoursesByCategory(categoryId) {
     try {
       const { data, error } = await supabase
@@ -47,7 +44,6 @@ export const coursesAPI = {
     }
   },
 
-  // Obtener cursos por nivel
   async getCoursesByLevel(levelId) {
     try {
       const { data, error } = await supabase
@@ -70,7 +66,6 @@ export const coursesAPI = {
     }
   },
 
-  // Obtener cursos del admin
   async getAdminCourses(adminId) {
     try {
       const { data, error } = await supabase
@@ -92,7 +87,6 @@ export const coursesAPI = {
     }
   },
 
-  // Obtener curso por ID
   async getCourseById(courseId) {
     try {
       const { data, error } = await supabase
@@ -114,10 +108,8 @@ export const coursesAPI = {
     }
   },
 
-  // Crear curso
   async createCourse(courseData) {
     try {
-      // Asegurar que tenga video_url
       const dataToInsert = {
         ...courseData,
         video_url: courseData.video_url || courseData.trailer_url || null,
@@ -144,7 +136,6 @@ export const coursesAPI = {
     }
   },
 
-  // Actualizar curso
   async updateCourse(courseId, updates) {
     try {
       const { data, error } = await supabase
@@ -170,7 +161,6 @@ export const coursesAPI = {
     }
   },
 
-  // Eliminar curso
   async deleteCourse(courseId) {
     try {
       const { error } = await supabase
@@ -186,7 +176,6 @@ export const coursesAPI = {
     }
   },
 
-  // Publicar/despublicar curso
   async togglePublish(courseId, publish = true) {
     try {
       const { data, error } = await supabase

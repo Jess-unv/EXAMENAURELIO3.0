@@ -1,4 +1,3 @@
-// src/components/ProviderBottomNav.js
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -11,7 +10,6 @@ const ProviderBottomNav = () => {
   const route = useRoute();
   const [activeTab, setActiveTab] = useState('dashboard');
 
-  // Mapeo CORREGIDO para coincidir con AppNavigator
   const tabToScreenMap = {
     'dashboard': 'ProviderHome',
     'orders': 'ProviderOrders',
@@ -19,11 +17,9 @@ const ProviderBottomNav = () => {
     'profile': 'ProviderProfile'
   };
 
-  // Determinar qué tab está activo basado en la ruta actual
   useEffect(() => {
     const currentRoute = route.name;
     
-    // Buscar inversamente: qué tab corresponde a esta ruta
     Object.entries(tabToScreenMap).forEach(([tabId, screenName]) => {
       if (currentRoute === screenName) {
         setActiveTab(tabId);
@@ -31,7 +27,6 @@ const ProviderBottomNav = () => {
     });
   }, [route.name]);
 
-  // Función para navegación - SIMPLIFICADA
   const handleTabPress = (tabId) => {
     const screenName = tabToScreenMap[tabId];
     
@@ -41,7 +36,6 @@ const ProviderBottomNav = () => {
     }
   };
 
-  // Tabs para proveedor
   const providerTabs = [
     { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
     { id: 'orders', label: 'Pedidos', icon: 'list-alt' },

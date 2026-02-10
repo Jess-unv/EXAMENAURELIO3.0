@@ -1,11 +1,10 @@
-import * as FileSystem from 'expo-file-system';
-import { decode } from 'base64-arraybuffer';
+import * as FileSystem from 'expo-file-system/legacy';
 import { supabase } from './supabase';
 import { v4 as uuidv4 } from 'uuid';
 
 export const uploadMediaFile = async (fileUri, folder = 'courses', courseId = null) => {
   try {
-    console.log(`📤 Iniciando subida de archivo: ${fileUri}`);
+    console.log(` Iniciando subida de archivo: ${fileUri}`);
     
     // Obtener información del archivo
     const fileInfo = await FileSystem.getInfoAsync(fileUri);
@@ -41,10 +40,17 @@ export const uploadMediaFile = async (fileUri, folder = 'courses', courseId = nu
     console.log(`📏 Tamaño: ${fileInfo.size} bytes`);
     console.log(`🎨 Tipo: ${contentType}`);
 
+    // Convertir base64 a Uint8Array para compatibilidad con RN
+    const binaryString = atob(base64);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+
     // Subir a Supabase Storage
     const { data, error: uploadError } = await supabase.storage
       .from('course-media')
-      .upload(filePath, decode(base64), {
+      .upload(filePath, bytes, {
         contentType,
         upsert: false,
       });
@@ -380,3 +386,74 @@ export const cleanupUnusedFiles = async (courseId) => {
     return { success: false, error: error.message };
   }
 };
+
+// Agregar logs adicionales para depuración
+app.post('/create-payment-intent', async (req, res) => {
+  try {
+    const { courseId, userId, courseTitle } = req.body;
+
+    console.log('Datos recibidos:', { courseId, userId, courseTitle });
+
+    if (!courseId || !userId) {
+      console.error('Faltan datos requeridos: courseId o userId');
+      return res.status(400).json({ error: 'courseId y userId requeridos' });
+    }
+
+    // Verificar usuario
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('id, role')
+      .eq('id', userId)
+      .single();
+
+    if (userError || !user || user.role !== 'client') {
+      console.error('Usuario inválido:', userError);
+      return res.status(400).json({ error: 'Usuario inválido' });
+    }
+
+    console.log('Usuario verificado:', user);
+
+    // Obtener curso
+    const { data: course, error: courseError } = await supabase
+      .from('courses')
+      .select('price, discount_percentage, minimum_gain, is_published')
+      .eq('id', courseId)
+      .single();
+
+    if (courseError || !course) {
+      console.error('Curso no encontrado o error en la consulta:', courseError);
+      return res.status(404).json({ error: 'Curso no encontrado' });
+    }
+
+    if (!course.is_published) {
+      console.error('El curso no está publicado:', course);
+      return res.status(400).json({ error: 'El curso no está publicado' });
+    }
+
+    console.log('Curso encontrado:', course);
+
+    // Calcular precio final
+    const finalAmount = calculateDiscountedPrice(
+      course.price,
+      course.discount_percentage,
+      course.minimum_gain
+    );
+
+    console.log('Precio final calculado:', finalAmount);
+
+    // Crear PaymentIntent
+    const paymentIntent = await stripeClient.paymentIntents.create({
+      amount: Math.round(finalAmount * 100),
+      currency: 'mxn',
+      automatic_payment_methods: { enabled: true },
+      metadata: { userId, courseId, courseTitle, finalAmount },
+    });
+
+    console.log('PaymentIntent creado:', paymentIntent);
+
+    res.json({ clientSecret: paymentIntent.client_secret });
+  } catch (error) {
+    console.error('Error creando PaymentIntent:', error);
+    res.status(500).json({ error: error.message });
+  }
+});

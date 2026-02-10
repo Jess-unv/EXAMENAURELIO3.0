@@ -1,17 +1,20 @@
 // src/utils/mediaUtils.js
-import * as FileSystem from 'expo-file-system';
-import { decode } from 'base64-arraybuffer';
-import { supabase } from './supabase';
-import { v4 as uuidv4 } from 'uuid';
+import * as FileSystem from "expo-file-system/legacy";
+import { supabase } from "./supabase";
+import { v4 as uuidv4 } from "uuid";
 
-export const uploadMediaFile = async (fileUri, folder = 'courses', courseId = null) => {
+export const uploadMediaFile = async (
+  fileUri,
+  folder = "courses",
+  courseId = null,
+) => {
   try {
     console.log(`📤 Iniciando subida de archivo: ${fileUri}`);
-    
+
     // Obtener información del archivo
     const fileInfo = await FileSystem.getInfoAsync(fileUri);
     if (!fileInfo.exists) {
-      throw new Error('El archivo no existe');
+      throw new Error("El archivo no existe");
     }
 
     // Leer archivo como base64
@@ -20,21 +23,21 @@ export const uploadMediaFile = async (fileUri, folder = 'courses', courseId = nu
     });
 
     // Determinar tipo de archivo
-    const fileExt = fileUri.split('.').pop().toLowerCase();
+    const fileExt = fileUri.split(".").pop().toLowerCase();
     let contentType;
     let folderPath;
 
-    if (['mp4', 'mov', 'avi', 'mkv', 'webm'].includes(fileExt)) {
-      contentType = 'video/mp4';
+    if (["mp4", "mov", "avi", "mkv", "webm"].includes(fileExt)) {
+      contentType = "video/mp4";
       folderPath = `videos/${folder}`;
-    } else if (['jpg', 'jpeg'].includes(fileExt)) {
-      contentType = 'image/jpeg';
+    } else if (["jpg", "jpeg"].includes(fileExt)) {
+      contentType = "image/jpeg";
       folderPath = `images/${folder}`;
-    } else if (fileExt === 'png') {
-      contentType = 'image/png';
+    } else if (fileExt === "png") {
+      contentType = "image/png";
       folderPath = `images/${folder}`;
     } else {
-      throw new Error('Formato de archivo no soportado');
+      throw new Error("Formato de archivo no soportado");
     }
 
     // Generar nombre único
@@ -47,22 +50,22 @@ export const uploadMediaFile = async (fileUri, folder = 'courses', courseId = nu
 
     // Subir a Supabase Storage
     const { data, error: uploadError } = await supabase.storage
-      .from('course-media')
+      .from("course-media")
       .upload(filePath, decode(base64), {
         contentType,
         upsert: false,
       });
 
     if (uploadError) {
-      console.error('❌ Error de subida:', uploadError);
+      console.error("❌ Error de subida:", uploadError);
       throw uploadError;
     }
 
-    console.log('✅ Archivo subido exitosamente');
+    console.log("✅ Archivo subido exitosamente");
 
     // Obtener URL pública
     const { data: urlData } = supabase.storage
-      .from('course-media')
+      .from("course-media")
       .getPublicUrl(filePath);
 
     console.log(`🔗 URL pública: ${urlData.publicUrl}`);
@@ -73,10 +76,10 @@ export const uploadMediaFile = async (fileUri, folder = 'courses', courseId = nu
       path: filePath,
       fileName: fileName,
       fileSize: fileInfo.size,
-      contentType: contentType
+      contentType: contentType,
     };
   } catch (error) {
-    console.error('❌ Error en uploadMediaFile:', error);
+    console.error("❌ Error en uploadMediaFile:", error);
     throw error;
   }
 };
@@ -86,17 +89,17 @@ export const deleteMediaFile = async (filePath) => {
     if (!filePath) return { success: true };
 
     console.log(`🗑️ Eliminando archivo: ${filePath}`);
-    
+
     const { error } = await supabase.storage
-      .from('course-media')
+      .from("course-media")
       .remove([filePath]);
 
     if (error) throw error;
 
-    console.log('✅ Archivo eliminado exitosamente');
+    console.log("✅ Archivo eliminado exitosamente");
     return { success: true };
   } catch (error) {
-    console.error('❌ Error eliminando archivo:', error);
+    console.error("❌ Error eliminando archivo:", error);
     return { success: false, error: error.message };
   }
 };
@@ -104,35 +107,35 @@ export const deleteMediaFile = async (filePath) => {
 export const validateVideoFile = async (videoUri) => {
   try {
     const fileInfo = await FileSystem.getInfoAsync(videoUri);
-    
+
     if (!fileInfo.exists) {
-      return { valid: false, error: 'El archivo no existe' };
+      return { valid: false, error: "El archivo no existe" };
     }
 
     // Verificar tamaño (máximo 100MB)
     const maxSize = 100 * 1024 * 1024; // 100MB
     if (fileInfo.size > maxSize) {
-      return { 
-        valid: false, 
-        error: `El video es demasiado grande (${(fileInfo.size / 1024 / 1024).toFixed(2)}MB). Máximo: 100MB` 
+      return {
+        valid: false,
+        error: `El video es demasiado grande (${(fileInfo.size / 1024 / 1024).toFixed(2)}MB). Máximo: 100MB`,
       };
     }
 
     // Verificar extensión
-    const fileExt = videoUri.split('.').pop().toLowerCase();
-    const allowedExtensions = ['mp4', 'mov', 'avi', 'mkv'];
-    
+    const fileExt = videoUri.split(".").pop().toLowerCase();
+    const allowedExtensions = ["mp4", "mov", "avi", "mkv"];
+
     if (!allowedExtensions.includes(fileExt)) {
-      return { 
-        valid: false, 
-        error: `Formato no soportado: .${fileExt}. Formatos permitidos: ${allowedExtensions.join(', ')}` 
+      return {
+        valid: false,
+        error: `Formato no soportado: .${fileExt}. Formatos permitidos: ${allowedExtensions.join(", ")}`,
       };
     }
 
-    return { 
-      valid: true, 
+    return {
+      valid: true,
       size: fileInfo.size,
-      extension: fileExt 
+      extension: fileExt,
     };
   } catch (error) {
     return { valid: false, error: error.message };
@@ -140,17 +143,17 @@ export const validateVideoFile = async (videoUri) => {
 };
 
 export const getFileExtension = (uri) => {
-  return uri.split('.').pop().toLowerCase();
+  return uri.split(".").pop().toLowerCase();
 };
 
 export const isImageFile = (uri) => {
   const ext = getFileExtension(uri);
-  return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
+  return ["jpg", "jpeg", "png", "gif", "webp"].includes(ext);
 };
 
 export const isVideoFile = (uri) => {
   const ext = getFileExtension(uri);
-  return ['mp4', 'mov', 'avi', 'mkv', 'webm'].includes(ext);
+  return ["mp4", "mov", "avi", "mkv", "webm"].includes(ext);
 };
 
 // Función para comprimir imagen antes de subir
@@ -160,7 +163,7 @@ export const compressImage = async (imageUri, quality = 0.8) => {
     // Por ahora devolvemos la misma URI
     return imageUri;
   } catch (error) {
-    console.error('Error comprimiendo imagen:', error);
+    console.error("Error comprimiendo imagen:", error);
     return imageUri;
   }
 };

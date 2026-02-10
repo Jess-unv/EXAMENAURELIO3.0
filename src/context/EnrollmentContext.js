@@ -1,5 +1,11 @@
 // src/context/EnrollmentContext.js
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import { supabase } from "../utils/supabase";
 import { useAuth } from "./AuthContext";
 
@@ -8,12 +14,12 @@ const EnrollmentContext = createContext();
 export const EnrollmentProvider = ({ children }) => {
   const { user } = useAuth();
 
-  const [myEnrollments, setMyEnrollments] = useState([]);        // inscripciones del alumno
+  const [myEnrollments, setMyEnrollments] = useState([]); // inscripciones del alumno
   const [courseEnrollments, setCourseEnrollments] = useState([]); // inscripciones de un curso (para admin)
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Cargar inscripciones del usuario actual
+  // Cargar inscripciones del usuario actual (cliente)
   const loadMyEnrollments = useCallback(async () => {
     if (!user?.id || user.role !== "client") return;
 
@@ -23,24 +29,29 @@ export const EnrollmentProvider = ({ children }) => {
     try {
       const { data, error } = await supabase
         .from("enrollments")
-        .select(`
+        .select(
+          `
           *,
           course:courses (
             id,
             title,
             thumbnail_url,
             price,
-            level,
             duration_hours,
             language,
-            admin_id
+            admin_id,
+            is_published,
+            created_at,
+            level:levels (name)
           )
-        `)
+        `,
+        )
         .eq("client_id", user.id)
         .order("enrolled_at", { ascending: false });
 
       if (error) throw error;
 
+      console.log("Inscripciones cargadas correctamente:", data?.length || 0);
       setMyEnrollments(data || []);
     } catch (err) {
       console.error("Error cargando mis inscripciones:", err);
@@ -52,16 +63,18 @@ export const EnrollmentProvider = ({ children }) => {
   }, [user?.id, user?.role]);
 
   // Cargar inscripciones de un curso específico (para admin)
-  const loadCourseEnrollments = useCallback(async (courseId) => {
-    if (!user?.id || user.role !== "admin" || !courseId) return;
+  const loadCourseEnrollments = useCallback(
+    async (courseId) => {
+      if (!user?.id || user.role !== "admin" || !courseId) return;
 
-    setLoading(true);
-    setError(null);
+      setLoading(true);
+      setError(null);
 
-    try {
-      const { data, error } = await supabase
-        .from("enrollments")
-        .select(`
+      try {
+        const { data, error } = await supabase
+          .from("enrollments")
+          .select(
+            `
           *,
           client:users (
             id,
@@ -69,21 +82,24 @@ export const EnrollmentProvider = ({ children }) => {
             email,
             phone
           )
-        `)
-        .eq("course_id", courseId)
-        .order("enrolled_at", { ascending: false });
+        `,
+          )
+          .eq("course_id", courseId)
+          .order("enrolled_at", { ascending: false });
 
-      if (error) throw error;
+        if (error) throw error;
 
-      setCourseEnrollments(data || []);
-    } catch (err) {
-      console.error("Error cargando inscripciones del curso:", err);
-      setError(err.message);
-      setCourseEnrollments([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.id, user?.role]);
+        setCourseEnrollments(data || []);
+      } catch (err) {
+        console.error("Error cargando inscripciones del curso:", err);
+        setError(err.message);
+        setCourseEnrollments([]);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [user?.id, user?.role],
+  );
 
   // Crear una nueva inscripción
   const createEnrollment = async (enrollmentData) => {
@@ -168,15 +184,16 @@ export const EnrollmentProvider = ({ children }) => {
           event: "*",
           schema: "public",
           table: "enrollments",
-          filter: user.role === "admin"
-            ? `course_id=in.(select id from courses where admin_id=eq.${user.id})`
-            : `client_id=eq.${user.id}`,
+          filter:
+            user.role === "admin"
+              ? `course_id=in.(select id from courses where admin_id=eq.${user.id})`
+              : `client_id=eq.${user.id}`,
         },
         () => {
           console.log("Cambio detectado en inscripciones");
           if (user.role === "client") loadMyEnrollments();
           // Para admin, refrescaría al seleccionar curso específico
-        }
+        },
       )
       .subscribe();
 

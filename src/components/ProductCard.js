@@ -10,17 +10,19 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import {
-  COLORS,
   FONT_SIZES,
   FONT_WEIGHTS,
   BORDER_RADIUS,
   SHADOWS,
   SPACING,
 } from "../constants/theme";
+import { useTheme } from "../context/ThemeContext";
 
 const ProductCard = ({ product, onPress, onAddToCart, style }) => {
   const [isFavorite, setIsFavorite] = useState(product.isFavorite);
   const scaleAnim = new Animated.Value(1);
+
+  const { colors } = useTheme();
 
   const handleFavorite = () => {
     setIsFavorite(!isFavorite);
@@ -107,7 +109,7 @@ const ProductCard = ({ product, onPress, onAddToCart, style }) => {
           <Icon
             name={isFavorite ? "favorite" : "favorite-border"}
             size={20}
-            color={isFavorite ? COLORS.destructive : COLORS.mutedForeground}
+            color={isFavorite ? colors.destructive : colors.mutedForeground}
           />
         </TouchableOpacity>
 
@@ -167,8 +169,8 @@ const ProductCard = ({ product, onPress, onAddToCart, style }) => {
               size={16}
               color={
                 product.stock === 0
-                  ? COLORS.mutedForeground
-                  : COLORS.primaryForeground
+                  ? colors.mutedForeground
+                  : colors.primaryForeground
               }
             />
             <Text
@@ -192,7 +194,7 @@ const styles = StyleSheet.create({
     maxWidth: "50%",
   },
   card: {
-    backgroundColor: COLORS.card,
+    backgroundColor: colors.card,
     borderRadius: BORDER_RADIUS.lg,
     overflow: "hidden",
     ...SHADOWS.md,
@@ -212,16 +214,16 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.sm,
   },
   newBadge: {
-    backgroundColor: COLORS.success,
+    backgroundColor: colors.success,
   },
   discountBadge: {
-    backgroundColor: COLORS.destructive,
+    backgroundColor: colors.destructive,
   },
   stockBadge: {
-    backgroundColor: COLORS.warning,
+    backgroundColor: colors.warning,
   },
   badgeText: {
-    color: COLORS.primaryForeground,
+    color: colors.primaryForeground,
     fontSize: FONT_SIZES.xs - 1,
     fontWeight: FONT_WEIGHTS.bold,
   },
@@ -233,14 +235,14 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    backgroundColor: colors.card,
     alignItems: "center",
     justifyContent: "center",
     ...SHADOWS.sm,
   },
   imageContainer: {
     aspectRatio: 1,
-    backgroundColor: COLORS.muted,
+    backgroundColor: colors.muted,
     position: "relative",
   },
   productImage: {
@@ -254,7 +256,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   outOfStockText: {
-    color: COLORS.primaryForeground,
+    color: colors.primaryForeground,
     fontSize: FONT_SIZES.sm,
     fontWeight: FONT_WEIGHTS.bold,
     transform: [{ rotate: "-45deg" }],
@@ -265,7 +267,7 @@ const styles = StyleSheet.create({
   productName: {
     fontSize: FONT_SIZES.sm,
     fontWeight: FONT_WEIGHTS.medium,
-    color: COLORS.foreground,
+    color: colors.foreground,
     marginBottom: SPACING.xs,
     height: 40,
   },
@@ -276,13 +278,13 @@ const styles = StyleSheet.create({
   },
   rating: {
     fontSize: FONT_SIZES.xs,
-    color: COLORS.mutedForeground,
+    color: colors.mutedForeground,
     marginLeft: SPACING.xs,
     marginRight: SPACING.xs,
   },
   reviews: {
     fontSize: FONT_SIZES.xs,
-    color: COLORS.mutedForeground,
+    color: colors.mutedForeground,
   },
   priceContainer: {
     flexDirection: "row",
@@ -292,38 +294,38 @@ const styles = StyleSheet.create({
   price: {
     fontSize: FONT_SIZES.lg,
     fontWeight: FONT_WEIGHTS.bold,
-    color: COLORS.primary,
+    color: colors.primary,
   },
   discountPrice: {
     fontSize: FONT_SIZES.lg,
     fontWeight: FONT_WEIGHTS.bold,
-    color: COLORS.primary,
+    color: colors.primary,
     marginRight: SPACING.xs,
   },
   originalPrice: {
     fontSize: FONT_SIZES.sm,
-    color: COLORS.mutedForeground,
+    color: colors.mutedForeground,
     textDecorationLine: "line-through",
   },
   quickAddButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     borderRadius: BORDER_RADIUS.md,
     paddingVertical: SPACING.xs,
     gap: SPACING.xs,
   },
   disabledButton: {
-    backgroundColor: COLORS.border,
+    backgroundColor: colors.border,
   },
   quickAddText: {
-    color: COLORS.primaryForeground,
+    color: colors.primaryForeground,
     fontSize: FONT_SIZES.sm,
     fontWeight: FONT_WEIGHTS.medium,
   },
   disabledText: {
-    color: COLORS.mutedForeground,
+    color: colors.mutedForeground,
   },
 });
 

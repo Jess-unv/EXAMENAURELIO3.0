@@ -1,4 +1,3 @@
-// src/components/BottomNav.js
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -10,7 +9,6 @@ const BottomNav = ({ activeTab }) => {
   const navigation = useNavigation();
   const route = useRoute();
 
-  // Mapeo CORREGIDO para coincidir con AppNavigator
   const tabToScreenMap = {
     'Home': 'ClientHome',
     'Orders': 'ClientOrders', 
@@ -25,7 +23,6 @@ const BottomNav = ({ activeTab }) => {
     { id: 'Profile', label: 'Perfil', icon: 'person' },
   ];
 
-  // Función para manejar la navegación CORREGIDA
   const handleNavigation = (tabId) => {
     const screenName = tabToScreenMap[tabId];
     if (screenName) {

@@ -89,19 +89,17 @@ function AdminTabs() {
         options={{ title: "CURSOS" }} 
       />
 
-      {/* INSCRIPCIONES CON HEADER Y FLECHA */}
-      <Tab.Screen 
-        name="AdminEnrollments" 
-        component={AdminEnrollments} 
-        options={{ title: "INSCRIPCIONES" }} 
-      />
-
       {/* PERFIL CON HEADER Y FLECHA */}
       <Tab.Screen 
         name="AdminProfile" 
         component={ProfileScreen} 
         options={{ title: "MI PERFIL" }} 
       />
+      <Tab.Screen 
+      name="AdminEnrollments" 
+      component={AdminEnrollments} 
+      />
+      
     </Tab.Navigator>
   );
 }

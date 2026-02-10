@@ -15,23 +15,23 @@ import {
   Linking,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from "expo-file-system/legacy";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useCourses } from "../context/CourseContext";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 
 export default function AddCourseScreen({ navigation }) {
-  const { colors } = useTheme();
-  const { 
-    addCourse, 
-    categories, 
-    levels, 
-    isValidVideoUrl, 
+  const { colors, isDarkMode } = useTheme();
+  const {
+    addCourse,
+    categories,
+    levels,
+    isValidVideoUrl,
     isYouTubeVideo,
     uploadThumbnail,
     uploadLessonVideo,
-    uploadProgress 
+    uploadProgress,
   } = useCourses();
   const { user } = useAuth();
 
@@ -45,6 +45,10 @@ export default function AddCourseScreen({ navigation }) {
   const [isFree, setIsFree] = useState(true);
   const [price, setPrice] = useState("0");
   const [discountPercentage, setDiscountPercentage] = useState("0");
+
+  const handleDiscountChange = (value) => {
+    setDiscountPercentage(value);
+  };
   const [discountPrice, setDiscountPrice] = useState(0);
   const [discountRecommendation, setDiscountRecommendation] = useState("");
   const [selectedLevel, setSelectedLevel] = useState(null);
@@ -69,7 +73,7 @@ export default function AddCourseScreen({ navigation }) {
 
   useEffect(() => {
     const originalPrice = parseFloat(price) || 0;
-    
+
     if (originalPrice <= 0 || isFree) {
       setDiscountPrice(0);
       setDiscountRecommendation("");
@@ -88,7 +92,7 @@ export default function AddCourseScreen({ navigation }) {
     setDiscountRecommendation(rec);
 
     const perc = parseFloat(discountPercentage) || 0;
-    if (perc > 0 && perc < 100) {
+    if (perc > 0 && [10, 30, 50].includes(perc)) {
       const final = originalPrice * (1 - perc / 100);
       setDiscountPrice(final.toFixed(2));
     } else {
@@ -96,19 +100,24 @@ export default function AddCourseScreen({ navigation }) {
     }
   }, [price, discountPercentage, isFree]);
 
-  const requestPermissions = async (type = 'image') => {
+  const requestPermissions = async (type = "image") => {
     try {
-      if (type === 'video') {
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== 'granted') {
-          Alert.alert('Permiso necesario', 'Necesitamos acceso a tu galería para seleccionar videos');
+      if (type === "video") {
+        const { status } =
+          await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== "granted") {
+          Alert.alert(
+            "Permiso necesario",
+            "Necesitamos acceso a tu galería para seleccionar videos",
+          );
           return false;
         }
         return true;
       } else {
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== 'granted') {
-          Alert.alert('Permiso necesario', 'Necesitamos acceso a tu galería');
+        const { status } =
+          await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== "granted") {
+          Alert.alert("Permiso necesario", "Necesitamos acceso a tu galería");
           return false;
         }
         return true;
@@ -120,12 +129,12 @@ export default function AddCourseScreen({ navigation }) {
   };
 
   const pickImage = async () => {
-    const hasPermission = await requestPermissions('image');
+    const hasPermission = await requestPermissions("image");
     if (!hasPermission) return;
 
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
+        mediaTypes: ["images"],
         allowsEditing: true,
         aspect: [16, 9],
         quality: 0.7,
@@ -137,7 +146,10 @@ export default function AddCourseScreen({ navigation }) {
       }
     } catch (error) {
       console.error("Error al seleccionar imagen:", error);
-      Alert.alert("Error", "No se pudo seleccionar la imagen. Intenta de nuevo.");
+      Alert.alert(
+        "Error",
+        "No se pudo seleccionar la imagen. Intenta de nuevo.",
+      );
     }
   };
 
@@ -163,7 +175,10 @@ export default function AddCourseScreen({ navigation }) {
     }
 
     if (isPublished && lessons.length === 0) {
-      Alert.alert("Error", "Debes agregar al menos una lección para publicar el curso");
+      Alert.alert(
+        "Error",
+        "Debes agregar al menos una lección para publicar el curso",
+      );
       return false;
     }
 
@@ -190,12 +205,18 @@ export default function AddCourseScreen({ navigation }) {
 
       if (thumbnailUri) {
         try {
-          console.log('Subiendo imagen de portada...');
-          thumbnailUrl = await uploadThumbnail(thumbnailUri, `thumbnail_${Date.now()}.jpg`);
-          console.log('Imagen de portada subida:', thumbnailUrl);
+          console.log("Subiendo imagen de portada...");
+          thumbnailUrl = await uploadThumbnail(
+            thumbnailUri,
+            `thumbnail_${Date.now()}.jpg`,
+          );
+          console.log("Imagen de portada subida:", thumbnailUrl);
         } catch (error) {
-          console.error('Error subiendo imagen:', error);
-          Alert.alert("Error", "No se pudo subir la imagen de portada: " + error.message);
+          console.error("Error subiendo imagen:", error);
+          Alert.alert(
+            "Error",
+            "No se pudo subir la imagen de portada: " + error.message,
+          );
           setLoading(false);
           setUploading(false);
           return;
@@ -203,45 +224,50 @@ export default function AddCourseScreen({ navigation }) {
       }
 
       let updatedLessons = [...lessons];
-      
+
       if (lessons.length > 0) {
         console.log(`Procesando ${lessons.length} lecciones...`);
-        
+
         for (let i = 0; i < lessons.length; i++) {
           const lesson = lessons[i];
-          
+
           if (lesson.video_file_uri) {
             setUploadingLessonVideo(true);
             try {
-              console.log(`Subiendo video lección ${i + 1}: ${lesson.title}...`);
-              
+              console.log(
+                `Subiendo video lección ${i + 1}: ${lesson.title}...`,
+              );
+
               const videoUrl = await uploadLessonVideo(
                 lesson.video_file_uri,
-                `lesson_${Date.now()}_${i}_${lesson.title.replaceAll(/\s+/g, '_')}.mp4`
+                `lesson_${Date.now()}_${i}_${lesson.title.replaceAll(/\s+/g, "_")}.mp4`,
               );
-              
+
               updatedLessons[i] = {
                 ...lesson,
                 video_url: videoUrl,
-                video_file_uri: null
+                video_file_uri: null,
               };
-              
+
               console.log(`Video lección ${i + 1} subido:`, videoUrl);
-              
             } catch (error) {
               console.error(`Error subiendo video lección ${i + 1}:`, error);
-              
-              const shouldContinue = await new Promise(resolve => {
+
+              const shouldContinue = await new Promise((resolve) => {
                 Alert.alert(
                   "Error subiendo video",
                   `No se pudo subir el video de la lección "${lesson.title}". ¿Continuar sin este video?`,
                   [
-                    { text: "Cancelar", onPress: () => resolve(false), style: "cancel" },
-                    { text: "Continuar", onPress: () => resolve(true) }
-                  ]
+                    {
+                      text: "Cancelar",
+                      onPress: () => resolve(false),
+                      style: "cancel",
+                    },
+                    { text: "Continuar", onPress: () => resolve(true) },
+                  ],
                 );
               });
-              
+
               if (!shouldContinue) {
                 setLoading(false);
                 setUploading(false);
@@ -251,16 +277,16 @@ export default function AddCourseScreen({ navigation }) {
             } finally {
               setUploadingLessonVideo(false);
             }
-          }
-          else if (lesson.video_url && isValidVideoUrl(lesson.video_url)) {
-            console.log(`Lección ${i + 1} ya tiene URL válida: ${lesson.video_url}`);
-          }
-          else if (!lesson.video_url) {
+          } else if (lesson.video_url && isValidVideoUrl(lesson.video_url)) {
+            console.log(
+              `Lección ${i + 1} ya tiene URL válida: ${lesson.video_url}`,
+            );
+          } else if (!lesson.video_url) {
             console.log(`Lección ${i + 1} no tiene video asociado`);
           }
         }
       }
-      
+
       const formattedLessons = updatedLessons.map((lesson, index) => ({
         title: lesson.title,
         description: lesson.description || null,
@@ -268,7 +294,7 @@ export default function AddCourseScreen({ navigation }) {
         duration: lesson.duration ? Number.parseInt(lesson.duration) : 0,
         order_index: lesson.order_index || index,
         is_preview: false,
-        video_source_type: lesson.video_source_type || "url"
+        video_source_type: lesson.video_source_type || "url",
       }));
 
       const courseData = {
@@ -288,40 +314,43 @@ export default function AddCourseScreen({ navigation }) {
         language: language,
         is_published: isPublished,
         published_at: isPublished ? new Date().toISOString() : null,
-        lessons: formattedLessons
+        lessons: formattedLessons,
       };
 
-      console.log('Creando curso en Supabase...');
+      console.log("Creando curso en Supabase...");
 
       const result = await addCourse(courseData);
 
       if (result.success) {
         Alert.alert(
           "Éxito",
-          `Curso ${isPublished ? 'publicado' : 'guardado'} correctamente`,
+          `Curso ${isPublished ? "publicado" : "guardado"} correctamente`,
           [
             {
               text: "Ver curso",
               onPress: () => {
                 navigation.navigate("AdminPreview", {
                   courseData: result.course,
-                  courseId: result.course.id
+                  courseId: result.course.id,
                 });
-              }
+              },
             },
             {
               text: "Crear otro",
-              style: 'cancel',
-              onPress: resetForm
-            }
-          ]
+              style: "cancel",
+              onPress: resetForm,
+            },
+          ],
         );
       } else {
         throw new Error(result.error || "Error desconocido al crear el curso");
       }
     } catch (error) {
       console.error("Error al crear curso:", error);
-      Alert.alert("Error", error.message || "No se pudo crear el curso. Revisa tu conexión.");
+      Alert.alert(
+        "Error",
+        error.message || "No se pudo crear el curso. Revisa tu conexión.",
+      );
     } finally {
       setLoading(false);
       setUploading(false);
@@ -369,20 +398,25 @@ export default function AddCourseScreen({ navigation }) {
 
     let finalVideoUrl = currentLesson.video_url || null;
 
-    if (currentLesson.video_source_type === "file" && currentLesson.video_file_uri) {
+    if (
+      currentLesson.video_source_type === "file" &&
+      currentLesson.video_file_uri
+    ) {
       setUploadingLessonVideo(true);
-      
+
       try {
-        const fileInfo = await FileSystem.getInfoAsync(currentLesson.video_file_uri);
-        
+        const fileInfo = await FileSystem.getInfoAsync(
+          currentLesson.video_file_uri,
+        );
+
         if (fileInfo.exists) {
           const maxSize = 50 * 1024 * 1024;
-          
+
           if (fileInfo.size > maxSize) {
             Alert.alert(
               "Archivo muy grande",
               "El video no debe exceder los 50MB. Por favor, comprime el video o usa una URL.",
-              [{ text: "OK" }]
+              [{ text: "OK" }],
             );
             setUploadingLessonVideo(false);
             return;
@@ -390,7 +424,7 @@ export default function AddCourseScreen({ navigation }) {
 
           finalVideoUrl = await uploadLessonVideo(
             currentLesson.video_file_uri,
-            `lesson_${Date.now()}_${currentLesson.title.replaceAll(/\s+/g, '_')}.mp4`
+            `lesson_${Date.now()}_${currentLesson.title.replaceAll(/\s+/g, "_")}.mp4`,
           );
         } else {
           throw new Error("El archivo no existe");
@@ -399,38 +433,45 @@ export default function AddCourseScreen({ navigation }) {
         console.error("Error al subir video:", err);
         Alert.alert(
           "Error al subir video",
-          err.message || "No se pudo subir el video. Intenta con una URL o un archivo más pequeño.",
-          [{ text: "OK" }]
+          err.message ||
+            "No se pudo subir el video. Intenta con una URL o un archivo más pequeño.",
+          [{ text: "OK" }],
         );
         setUploadingLessonVideo(false);
         return;
       } finally {
         setUploadingLessonVideo(false);
       }
-    } 
-    else if (currentLesson.video_source_type === "url" && currentLesson.video_url.trim()) {
+    } else if (
+      currentLesson.video_source_type === "url" &&
+      currentLesson.video_url.trim()
+    ) {
       if (!isValidVideoUrl(currentLesson.video_url)) {
         Alert.alert(
-          "Error", 
-          "URL de video inválida. Usa:\n• YouTube: https://youtube.com/watch?v=ID\n• Vimeo\n• Enlace directo a MP4"
+          "Error",
+          "URL de video inválida. Usa:\n• YouTube: https://youtube.com/watch?v=ID\n• Vimeo\n• Enlace directo a MP4",
         );
         return;
       }
       finalVideoUrl = currentLesson.video_url.trim();
     }
-    
+
     if (!finalVideoUrl) {
-      const confirm = await new Promise(resolve => {
+      const confirm = await new Promise((resolve) => {
         Alert.alert(
           "Sin video",
           "¿Deseas guardar la lección sin video? Puedes agregarlo más tarde.",
           [
-            { text: "Cancelar", onPress: () => resolve(false), style: "cancel" },
-            { text: "Guardar", onPress: () => resolve(true) }
-          ]
+            {
+              text: "Cancelar",
+              onPress: () => resolve(false),
+              style: "cancel",
+            },
+            { text: "Guardar", onPress: () => resolve(true) },
+          ],
         );
       });
-      
+
       if (!confirm) return;
     }
 
@@ -438,8 +479,11 @@ export default function AddCourseScreen({ navigation }) {
       title: currentLesson.title.trim(),
       description: currentLesson.description.trim() || null,
       video_url: finalVideoUrl,
-      duration: currentLesson.duration ? Number.parseInt(currentLesson.duration) : 0,
-      order_index: editingLessonIndex === -1 ? lessons.length : editingLessonIndex,
+      duration: currentLesson.duration
+        ? Number.parseInt(currentLesson.duration)
+        : 0,
+      order_index:
+        editingLessonIndex === -1 ? lessons.length : editingLessonIndex,
       is_preview: false,
       video_source_type: currentLesson.video_source_type || "url",
       video_file_uri: null,
@@ -451,31 +495,35 @@ export default function AddCourseScreen({ navigation }) {
     } else {
       updatedLessons[editingLessonIndex] = lessonToSave;
     }
-    
+
     setLessons(updatedLessons);
     setShowLessonModal(false);
   };
 
   const deleteLesson = (index) => {
-    Alert.alert("Eliminar lección", "¿Seguro que quieres eliminar esta lección?", [
-      { text: "Cancelar" },
-      {
-        text: "Eliminar",
-        style: "destructive",
-        onPress: () => {
-          setLessons(lessons.filter((_, i) => i !== index));
+    Alert.alert(
+      "Eliminar lección",
+      "¿Seguro que quieres eliminar esta lección?",
+      [
+        { text: "Cancelar" },
+        {
+          text: "Eliminar",
+          style: "destructive",
+          onPress: () => {
+            setLessons(lessons.filter((_, i) => i !== index));
+          },
         },
-      },
-    ]);
+      ],
+    );
   };
 
   const pickLessonVideo = async () => {
-    const hasPermission = await requestPermissions('video');
+    const hasPermission = await requestPermissions("video");
     if (!hasPermission) return;
 
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['videos'],
+        mediaTypes: ["videos"],
         allowsEditing: false,
         videoQuality: 0.5,
         presentationStyle: ImagePicker.UIImagePickerPresentationStyle.POPOVER,
@@ -493,21 +541,22 @@ export default function AddCourseScreen({ navigation }) {
       }
     } catch (error) {
       console.error("Error al seleccionar video:", error);
-      Alert.alert("Error", "No se pudo seleccionar el video. Intenta de nuevo.");
+      Alert.alert(
+        "Error",
+        "No se pudo seleccionar el video. Intenta de nuevo.",
+      );
     }
   };
 
   const testVideo = () => {
     if (!currentLesson.video_url) return;
-    
+
     if (isYouTubeVideo(currentLesson.video_url)) {
       Linking.openURL(currentLesson.video_url);
     } else {
-      Alert.alert(
-        "Test Video",
-        "URL válida. Puedes guardar la lección.",
-        [{ text: "OK" }]
-      );
+      Alert.alert("Test Video", "URL válida. Puedes guardar la lección.", [
+        { text: "OK" },
+      ]);
     }
   };
 
@@ -521,13 +570,13 @@ export default function AddCourseScreen({ navigation }) {
       paddingBottom: 40,
     },
     header: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       marginBottom: 20,
     },
     title: {
       fontSize: 24,
-      fontWeight: 'bold',
+      fontWeight: "bold",
       color: colors.text,
       marginLeft: 10,
     },
@@ -536,7 +585,7 @@ export default function AddCourseScreen({ navigation }) {
     },
     sectionTitle: {
       fontSize: 16,
-      fontWeight: 'bold',
+      fontWeight: "bold",
       color: colors.text,
       marginBottom: 10,
     },
@@ -544,12 +593,12 @@ export default function AddCourseScreen({ navigation }) {
       height: 200,
       borderRadius: 10,
       backgroundColor: colors.card,
-      justifyContent: 'center',
-      alignItems: 'center',
+      justifyContent: "center",
+      alignItems: "center",
       borderWidth: 1,
       borderColor: colors.border,
-      borderStyle: 'dashed',
-      overflow: 'hidden',
+      borderStyle: "dashed",
+      overflow: "hidden",
     },
     input: {
       padding: 12,
@@ -561,8 +610,8 @@ export default function AddCourseScreen({ navigation }) {
       marginBottom: 10,
     },
     categoryContainer: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
+      flexDirection: "row",
+      flexWrap: "wrap",
       gap: 10,
     },
     categoryButton: {
@@ -570,10 +619,10 @@ export default function AddCourseScreen({ navigation }) {
       borderRadius: 8,
       borderWidth: 1,
       minWidth: 120,
-      alignItems: 'center',
+      alignItems: "center",
     },
     levelContainer: {
-      flexDirection: 'row',
+      flexDirection: "row",
       gap: 10,
     },
     levelButton: {
@@ -581,10 +630,10 @@ export default function AddCourseScreen({ navigation }) {
       padding: 12,
       borderRadius: 8,
       borderWidth: 1,
-      alignItems: 'center',
+      alignItems: "center",
     },
     actions: {
-      flexDirection: 'row',
+      flexDirection: "row",
       gap: 10,
       marginTop: 20,
     },
@@ -592,22 +641,27 @@ export default function AddCourseScreen({ navigation }) {
       flex: 1,
       padding: 15,
       borderRadius: 8,
-      backgroundColor: colors.card,
-      borderWidth: 1,
-      borderColor: colors.border,
-      alignItems: 'center',
+      backgroundColor: isDarkMode ? colors.card : colors.borderLight,
+      borderWidth: 2,
+      borderColor: colors.primary,
+      alignItems: "center",
     },
     publishButton: {
       flex: 2,
       padding: 15,
       borderRadius: 8,
       backgroundColor: colors.primary,
-      alignItems: 'center',
+      alignItems: "center",
+      elevation: 3,
+      shadowColor: colors.primary,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
     },
     switchContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
       marginTop: 15,
       paddingVertical: 10,
     },
@@ -625,13 +679,13 @@ export default function AddCourseScreen({ navigation }) {
     },
     progressBar: {
       backgroundColor: colors.primary,
-      height: '100%',
+      height: "100%",
       borderRadius: 2,
     },
     lessonHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
       marginBottom: 12,
     },
     lessonCard: {
@@ -644,7 +698,7 @@ export default function AddCourseScreen({ navigation }) {
     },
     lessonTitle: {
       fontSize: 16,
-      fontWeight: '600',
+      fontWeight: "600",
       color: colors.text,
       marginBottom: 8,
     },
@@ -654,49 +708,49 @@ export default function AddCourseScreen({ navigation }) {
       marginBottom: 4,
     },
     lessonBadge: {
-      backgroundColor: colors.primary + '20',
+      backgroundColor: colors.primary + "20",
       paddingHorizontal: 8,
       paddingVertical: 4,
       borderRadius: 4,
-      alignSelf: 'flex-start',
+      alignSelf: "flex-start",
       marginTop: 4,
     },
     lessonBadgeText: {
       color: colors.primary,
       fontSize: 12,
-      fontWeight: '500',
+      fontWeight: "500",
     },
     lessonActions: {
-      flexDirection: 'row',
+      flexDirection: "row",
       gap: 16,
       marginTop: 8,
     },
     addLessonBtn: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       backgroundColor: colors.primary,
       paddingVertical: 8,
       paddingHorizontal: 16,
       borderRadius: 8,
     },
     addLessonText: {
-      color: '#fff',
-      fontWeight: '600',
+      color: "#fff",
+      fontWeight: "600",
       marginLeft: 8,
     },
     modalVideoPicker: {
       height: 150,
       borderRadius: 10,
       backgroundColor: colors.card,
-      justifyContent: 'center',
-      alignItems: 'center',
+      justifyContent: "center",
+      alignItems: "center",
       borderWidth: 2,
       borderColor: colors.border,
-      borderStyle: currentLesson.video_file_uri ? 'solid' : 'dashed',
+      borderStyle: currentLesson.video_file_uri ? "solid" : "dashed",
       marginVertical: 10,
     },
     testButton: {
-      backgroundColor: colors.primary + '20',
+      backgroundColor: colors.primary + "20",
       padding: 8,
       borderRadius: 6,
       marginLeft: 10,
@@ -704,6 +758,30 @@ export default function AddCourseScreen({ navigation }) {
     discountSection: {
       marginTop: 10,
       marginBottom: 20,
+    },
+    label: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: "600",
+      marginBottom: 8,
+    },
+    discountOptionsContainer: {
+      flexDirection: "row",
+      gap: 10,
+      marginVertical: 12,
+      justifyContent: "space-between",
+    },
+    discountOption: {
+      flex: 1,
+      padding: 12,
+      borderRadius: 8,
+      borderWidth: 2,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    discountOptionText: {
+      fontSize: 14,
+      fontWeight: "600",
     },
     recommendationText: {
       color: colors.textSecondary,
@@ -714,12 +792,12 @@ export default function AddCourseScreen({ navigation }) {
       color: colors.success,
       fontSize: 14,
       marginTop: 8,
-      fontWeight: '500',
+      fontWeight: "500",
     },
     freeSwitchContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
       marginTop: 15,
       paddingVertical: 10,
     },
@@ -733,20 +811,21 @@ export default function AddCourseScreen({ navigation }) {
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         
-
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Portada del Curso *</Text>
           <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
             {thumbnailUri ? (
-              <Image 
-                source={{ uri: thumbnailUri }} 
-                style={{ width: '100%', height: '100%', borderRadius: 8 }} 
+              <Image
+                source={{ uri: thumbnailUri }}
+                style={{ width: "100%", height: "100%", borderRadius: 8 }}
                 resizeMode="cover"
               />
             ) : (
               <>
                 <Icon name="image-plus" size={40} color={colors.primary} />
-                <Text style={{ color: colors.text, marginTop: 5 }}>Seleccionar imagen</Text>
+                <Text style={{ color: colors.text, marginTop: 5 }}>
+                  Seleccionar imagen
+                </Text>
               </>
             )}
           </TouchableOpacity>
@@ -754,7 +833,7 @@ export default function AddCourseScreen({ navigation }) {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Información Básica</Text>
-          
+
           <TextInput
             placeholder="Título del curso *"
             placeholderTextColor={colors.textSecondary}
@@ -762,7 +841,7 @@ export default function AddCourseScreen({ navigation }) {
             value={title}
             onChangeText={setTitle}
           />
-          
+
           <TextInput
             placeholder="Descripción del curso"
             placeholderTextColor={colors.textSecondary}
@@ -777,28 +856,39 @@ export default function AddCourseScreen({ navigation }) {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Categoría *</Text>
           <View style={styles.categoryContainer}>
-            {categories.map(category => (
+            {categories.map((category) => (
               <TouchableOpacity
                 key={category.id}
                 style={[
                   styles.categoryButton,
-                  { 
-                    backgroundColor: selectedCategory === category.id ? colors.primary : colors.card,
-                    borderColor: selectedCategory === category.id ? colors.primary : colors.border,
-                  }
+                  {
+                    backgroundColor:
+                      selectedCategory === category.id
+                        ? colors.primary
+                        : colors.card,
+                    borderColor:
+                      selectedCategory === category.id
+                        ? colors.primary
+                        : colors.border,
+                  },
                 ]}
                 onPress={() => setSelectedCategory(category.id)}
               >
-                <Icon 
-                  name={category.icon || 'book'} 
-                  size={20} 
-                  color={selectedCategory === category.id ? '#FFF' : colors.primary} 
+                <Icon
+                  name={category.icon || "book"}
+                  size={20}
+                  color={
+                    selectedCategory === category.id ? "#FFF" : colors.primary
+                  }
                 />
-                <Text style={{ 
-                  color: selectedCategory === category.id ? '#FFF' : colors.text,
-                  marginTop: 5,
-                  fontSize: 12,
-                }}>
+                <Text
+                  style={{
+                    color:
+                      selectedCategory === category.id ? "#FFF" : colors.text,
+                    marginTop: 5,
+                    fontSize: 12,
+                  }}
+                >
                   {category.name}
                 </Text>
               </TouchableOpacity>
@@ -807,22 +897,28 @@ export default function AddCourseScreen({ navigation }) {
 
           <Text style={[styles.sectionTitle, { marginTop: 15 }]}>Nivel *</Text>
           <View style={styles.levelContainer}>
-            {levels.map(level => (
+            {levels.map((level) => (
               <TouchableOpacity
                 key={level.id}
                 style={[
                   styles.levelButton,
-                  { 
-                    backgroundColor: selectedLevel === level.id ? colors.primary : colors.card,
-                    borderColor: selectedLevel === level.id ? colors.primary : colors.border,
-                  }
+                  {
+                    backgroundColor:
+                      selectedLevel === level.id ? colors.primary : colors.card,
+                    borderColor:
+                      selectedLevel === level.id
+                        ? colors.primary
+                        : colors.border,
+                  },
                 ]}
                 onPress={() => setSelectedLevel(level.id)}
               >
-                <Text style={{ 
-                  color: selectedLevel === level.id ? '#FFF' : colors.text,
-                  fontWeight: '500',
-                }}>
+                <Text
+                  style={{
+                    color: selectedLevel === level.id ? "#FFF" : colors.text,
+                    fontWeight: "500",
+                  }}
+                >
                   {level.name}
                 </Text>
               </TouchableOpacity>
@@ -832,21 +928,22 @@ export default function AddCourseScreen({ navigation }) {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Precio</Text>
-          
-          <View style={styles.freeSwitchContainer}>
-            <Text style={styles.freeSwitchText}>Curso gratuito</Text>
+
+          <View style={[styles.freeSwitchContainer, { paddingVertical: 12, paddingHorizontal: 0 }]}>
+            <Text style={[styles.freeSwitchText, { fontSize: 16, fontWeight: "600" }]}>Curso gratuito</Text>
             <Switch
               value={isFree}
               onValueChange={(value) => {
                 setIsFree(value);
                 if (value) {
-                  setPrice("0");
+                  setPrice("");
                   setDiscountPercentage("0");
                   setDiscountPrice(0);
                 }
               }}
-              trackColor={{ false: colors.border, true: colors.primary }}
-              thumbColor={isFree ? '#FFF' : '#FFF'}
+              trackColor={{ false: colors.border, true: colors.success }}
+              thumbColor={colors.switchThumb}
+              ios_backgroundColor={colors.border}
             />
           </View>
 
@@ -862,15 +959,74 @@ export default function AddCourseScreen({ navigation }) {
               />
 
               <View style={styles.discountSection}>
-                <Text style={styles.label}>Porcentaje de descuento (opcional)</Text>
-                <TextInput
-                  style={styles.input}
-                  value={discountPercentage}
-                  onChangeText={setDiscountPercentage}
-                  keyboardType="numeric"
-                  placeholder="Ej: 30 (para 30%)"
-                  placeholderTextColor={colors.textSecondary}
-                />
+                <Text style={styles.label}>
+                  Porcentaje de descuento (opcional)
+                </Text>
+                <View style={styles.discountOptionsContainer}>
+                  {[10, 30, 50].map((percentValue) => (
+                    <TouchableOpacity
+                      key={percentValue}
+                      style={[
+                        styles.discountOption,
+                        {
+                          backgroundColor:
+                            discountPercentage === percentValue.toString()
+                              ? colors.primary
+                              : colors.card,
+                          borderColor:
+                            discountPercentage === percentValue.toString()
+                              ? colors.primary
+                              : colors.border,
+                        },
+                      ]}
+                      onPress={() =>
+                        setDiscountPercentage(percentValue.toString())
+                      }
+                    >
+                      <Text
+                        style={[
+                          styles.discountOptionText,
+                          {
+                            color:
+                              discountPercentage === percentValue.toString()
+                                ? "#FFF"
+                                : colors.text,
+                          },
+                        ]}
+                      >
+                        {percentValue}%
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                  <TouchableOpacity
+                    style={[
+                      styles.discountOption,
+                      {
+                        backgroundColor:
+                          discountPercentage === "0"
+                            ? colors.primary
+                            : colors.card,
+                        borderColor:
+                          discountPercentage === "0"
+                            ? colors.primary
+                            : colors.border,
+                      },
+                    ]}
+                    onPress={() => setDiscountPercentage("0")}
+                  >
+                    <Text
+                      style={[
+                        styles.discountOptionText,
+                        {
+                          color:
+                            discountPercentage === "0" ? "#FFF" : colors.text,
+                        },
+                      ]}
+                    >
+                      Sin descuento
+                    </Text>
+                  </TouchableOpacity>
+                </View>
                 {discountRecommendation && (
                   <Text style={styles.recommendationText}>
                     {discountRecommendation}
@@ -878,38 +1034,45 @@ export default function AddCourseScreen({ navigation }) {
                 )}
                 {discountPrice > 0 && (
                   <View>
-                    <Text style={styles.discountInfo}>
+                    <Text style={[styles.discountInfo, { color: colors.success }]}>
                       Precio original: ${parseFloat(price).toFixed(2)}
                     </Text>
-                    <Text style={styles.discountInfo}>
+                    <Text style={[styles.discountInfo, { color: colors.success }]}>
                       Precio con descuento: ${discountPrice}
                     </Text>
-                    <Text style={styles.discountInfo}>
-                      Ganancia perdida: ${(parseFloat(price) - parseFloat(discountPrice)).toFixed(2)}
+                    <Text style={[styles.discountInfo, { color: colors.success }]}>
+                      Ganancia perdida: $
+                      {(parseFloat(price) - parseFloat(discountPrice)).toFixed(
+                        2,
+                      )}
                     </Text>
                   </View>
                 )}
               </View>
             </>
           )}
-          
+
           <View style={styles.switchContainer}>
             <Text style={styles.switchText}>
-              {isPublished ? 'Publicar inmediatamente' : 'Guardar como borrador'}
+              {isPublished
+                ? "Publicar inmediatamente"
+                : "Guardar como borrador"}
             </Text>
             <Switch
               value={isPublished}
               onValueChange={setIsPublished}
               trackColor={{ false: colors.border, true: colors.primary }}
-              thumbColor={isPublished ? '#FFF' : '#FFF'}
+              thumbColor={isPublished ? "#FFF" : "#FFF"}
             />
           </View>
         </View>
 
         <View style={styles.section}>
           <View style={styles.lessonHeader}>
-            <Text style={styles.sectionTitle}>Lecciones del curso ({lessons.length})</Text>
-            <TouchableOpacity 
+            <Text style={styles.sectionTitle}>
+              Lecciones del curso ({lessons.length})
+            </Text>
+            <TouchableOpacity
               style={styles.addLessonBtn}
               onPress={() => openLessonModal()}
             >
@@ -919,7 +1082,13 @@ export default function AddCourseScreen({ navigation }) {
           </View>
 
           {lessons.length === 0 ? (
-            <Text style={{ color: colors.textSecondary, textAlign: 'center', marginVertical: 20 }}>
+            <Text
+              style={{
+                color: colors.textSecondary,
+                textAlign: "center",
+                marginVertical: 20,
+              }}
+            >
               Aún no has agregado lecciones al curso
             </Text>
           ) : (
@@ -930,21 +1099,24 @@ export default function AddCourseScreen({ navigation }) {
                   <Text style={styles.lessonInfo}>{lesson.description}</Text>
                 )}
                 {lesson.video_url && (
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Text style={styles.lessonInfo}>
-                      Video: {lesson.video_url.length > 40 
-                        ? `${lesson.video_url.substring(0, 40)}...` 
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    <Text style={[styles.lessonInfo, { flex: 1, minWidth: 150 }]}>
+                      Video:{" "}
+                      {lesson.video_url.length > 40
+                        ? `${lesson.video_url.substring(0, 40)}...`
                         : lesson.video_url}
                     </Text>
                     {isYouTubeVideo(lesson.video_url) && (
-                      <View style={styles.lessonBadge}>
+                      <View style={[styles.lessonBadge, { flexShrink: 1 }]}>
                         <Text style={styles.lessonBadgeText}>YouTube</Text>
                       </View>
                     )}
                   </View>
                 )}
                 {lesson.duration && lesson.duration > 0 && (
-                  <Text style={styles.lessonInfo}>Duración: {lesson.duration} min</Text>
+                  <Text style={styles.lessonInfo}>
+                    Duración: {lesson.duration} min
+                  </Text>
                 )}
 
                 <View style={styles.lessonActions}>
@@ -963,13 +1135,17 @@ export default function AddCourseScreen({ navigation }) {
         {uploading && (
           <View style={[styles.section, styles.progressContainer]}>
             <Text style={styles.sectionTitle}>Subiendo archivos...</Text>
-            <View style={{ 
-              backgroundColor: colors.border, 
-              borderRadius: 2, 
-              height: 4,
-              overflow: 'hidden',
-            }}>
-              <View style={[styles.progressBar, { width: `${uploadProgress}%` }]} />
+            <View
+              style={{
+                backgroundColor: colors.border,
+                borderRadius: 2,
+                height: 4,
+                overflow: "hidden",
+              }}
+            >
+              <View
+                style={[styles.progressBar, { width: `${uploadProgress}%` }]}
+              />
             </View>
             <Text style={styles.progressText}>
               {uploadProgress}% completado
@@ -989,12 +1165,12 @@ export default function AddCourseScreen({ navigation }) {
             {loading && !isPublished ? (
               <ActivityIndicator color={colors.text} />
             ) : (
-              <Text style={{ color: colors.text, fontWeight: '500' }}>
+              <Text style={{ color: colors.text, fontWeight: "500" }}>
                 Guardar borrador
               </Text>
             )}
           </TouchableOpacity>
-          
+
           <TouchableOpacity
             style={styles.publishButton}
             onPress={() => {
@@ -1006,7 +1182,7 @@ export default function AddCourseScreen({ navigation }) {
             {loading && isPublished ? (
               <ActivityIndicator color="#FFF" />
             ) : (
-              <Text style={{ color: '#FFF', fontWeight: 'bold' }}>
+              <Text style={{ color: "#FFF", fontWeight: "bold" }}>
                 Publicar Curso
               </Text>
             )}
@@ -1021,31 +1197,39 @@ export default function AddCourseScreen({ navigation }) {
         onRequestClose={() => setShowLessonModal(false)}
       >
         <TouchableWithoutFeedback onPress={() => setShowLessonModal(false)}>
-          <View style={{
-            flex: 1,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}>
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: "rgba(0,0,0,0.5)",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
             <TouchableWithoutFeedback>
-              <View style={{
-                width: '90%',
-                maxWidth: 400,
-                backgroundColor: colors.card,
-                borderRadius: 16,
-                padding: 24,
-                elevation: 5,
-                maxHeight: '80%',
-              }}>
+              <View
+                style={{
+                  width: "90%",
+                  maxWidth: 400,
+                  backgroundColor: colors.card,
+                  borderRadius: 16,
+                  padding: 24,
+                  elevation: 5,
+                  maxHeight: "80%",
+                }}
+              >
                 <ScrollView showsVerticalScrollIndicator={false}>
-                  <Text style={{
-                    fontSize: 20,
-                    fontWeight: 'bold',
-                    color: colors.text,
-                    marginBottom: 20,
-                    textAlign: 'center',
-                  }}>
-                    {editingLessonIndex === -1 ? 'Nueva Lección' : 'Editar Lección'}
+                  <Text
+                    style={{
+                      fontSize: 20,
+                      fontWeight: "bold",
+                      color: colors.text,
+                      marginBottom: 20,
+                      textAlign: "center",
+                    }}
+                  >
+                    {editingLessonIndex === -1
+                      ? "Nueva Lección"
+                      : "Editar Lección"}
                   </Text>
 
                   <TextInput
@@ -1053,29 +1237,64 @@ export default function AddCourseScreen({ navigation }) {
                     placeholder="Título de la lección *"
                     placeholderTextColor={colors.textSecondary}
                     value={currentLesson.title}
-                    onChangeText={(text) => setCurrentLesson({ ...currentLesson, title: text })}
+                    onChangeText={(text) =>
+                      setCurrentLesson({ ...currentLesson, title: text })
+                    }
                   />
 
-                  <Text style={[styles.sectionTitle, { marginTop: 10 }]}>Video de la lección</Text>
-                  <View style={{ flexDirection: 'row', gap: 10, marginVertical: 12 }}>
+                  <Text style={[styles.sectionTitle, { marginTop: 10 }]}>
+                    Video de la lección
+                  </Text>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      gap: 10,
+                      marginVertical: 12,
+                    }}
+                  >
                     <TouchableOpacity
                       style={[
                         styles.categoryButton,
-                        { 
-                          backgroundColor: currentLesson.video_source_type === "file" ? colors.primary + '20' : colors.card,
-                          borderColor: currentLesson.video_source_type === "file" ? colors.primary : colors.border,
+                        {
+                          backgroundColor:
+                            currentLesson.video_source_type === "file"
+                              ? colors.primary + "20"
+                              : colors.card,
+                          borderColor:
+                            currentLesson.video_source_type === "file"
+                              ? colors.primary
+                              : colors.border,
                           padding: 12,
                           minWidth: 110,
-                        }
+                        },
                       ]}
-                      onPress={() => setCurrentLesson({ ...currentLesson, video_source_type: "file", video_url: "" })}
+                      onPress={() =>
+                        setCurrentLesson({
+                          ...currentLesson,
+                          video_source_type: "file",
+                          video_url: "",
+                        })
+                      }
                     >
-                      <Icon name="upload" size={20} color={currentLesson.video_source_type === "file" ? colors.primary : colors.text} />
-                      <Text style={{ 
-                        color: currentLesson.video_source_type === "file" ? colors.primary : colors.text,
-                        marginTop: 5,
-                        fontSize: 12,
-                      }}>
+                      <Icon
+                        name="upload"
+                        size={20}
+                        color={
+                          currentLesson.video_source_type === "file"
+                            ? colors.primary
+                            : colors.text
+                        }
+                      />
+                      <Text
+                        style={{
+                          color:
+                            currentLesson.video_source_type === "file"
+                              ? colors.primary
+                              : colors.text,
+                          marginTop: 5,
+                          fontSize: 12,
+                        }}
+                      >
                         Subir archivo
                       </Text>
                     </TouchableOpacity>
@@ -1083,54 +1302,112 @@ export default function AddCourseScreen({ navigation }) {
                     <TouchableOpacity
                       style={[
                         styles.categoryButton,
-                        { 
-                          backgroundColor: currentLesson.video_source_type === "url" ? colors.primary + '20' : colors.card,
-                          borderColor: currentLesson.video_source_type === "url" ? colors.primary : colors.border,
+                        {
+                          backgroundColor:
+                            currentLesson.video_source_type === "url"
+                              ? colors.primary + "20"
+                              : colors.card,
+                          borderColor:
+                            currentLesson.video_source_type === "url"
+                              ? colors.primary
+                              : colors.border,
                           padding: 12,
                           minWidth: 110,
-                        }
+                        },
                       ]}
-                      onPress={() => setCurrentLesson({ ...currentLesson, video_source_type: "url", video_file_uri: null })}
+                      onPress={() =>
+                        setCurrentLesson({
+                          ...currentLesson,
+                          video_source_type: "url",
+                          video_file_uri: null,
+                        })
+                      }
                     >
-                      <Icon name="link" size={20} color={currentLesson.video_source_type === "url" ? colors.primary : colors.text} />
-                      <Text style={{ 
-                        color: currentLesson.video_source_type === "url" ? colors.primary : colors.text,
-                        marginTop: 5,
-                        fontSize: 12,
-                      }}>
+                      <Icon
+                        name="link"
+                        size={20}
+                        color={
+                          currentLesson.video_source_type === "url"
+                            ? colors.primary
+                            : colors.text
+                        }
+                      />
+                      <Text
+                        style={{
+                          color:
+                            currentLesson.video_source_type === "url"
+                              ? colors.primary
+                              : colors.text,
+                          marginTop: 5,
+                          fontSize: 12,
+                        }}
+                      >
                         Usar URL
                       </Text>
                     </TouchableOpacity>
                   </View>
 
                   {currentLesson.video_source_type === "file" ? (
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       style={styles.modalVideoPicker}
                       onPress={pickLessonVideo}
                       disabled={uploadingLessonVideo}
                     >
                       {uploadingLessonVideo ? (
                         <>
-                          <ActivityIndicator size="large" color={colors.primary} />
-                          <Text style={{ color: colors.primary, marginTop: 10 }}>
+                          <ActivityIndicator
+                            size="large"
+                            color={colors.primary}
+                          />
+                          <Text
+                            style={{ color: colors.primary, marginTop: 10 }}
+                          >
                             Subiendo video...
                           </Text>
                         </>
                       ) : currentLesson.video_file_uri ? (
                         <>
-                          <Icon name="video-check" size={40} color={colors.primary} />
-                          <Text style={{ color: colors.primary, marginTop: 5, fontWeight: '600' }}>
+                          <Icon
+                            name="video-check"
+                            size={40}
+                            color={colors.primary}
+                          />
+                          <Text
+                            style={{
+                              color: colors.primary,
+                              marginTop: 5,
+                              fontWeight: "600",
+                            }}
+                          >
                             Video seleccionado
                           </Text>
-                          <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>
+                          <Text
+                            style={{
+                              color: colors.textSecondary,
+                              fontSize: 12,
+                              marginTop: 2,
+                            }}
+                          >
                             Toca para cambiar
                           </Text>
                         </>
                       ) : (
                         <>
-                          <Icon name="video-plus" size={40} color={colors.text} />
-                          <Text style={{ color: colors.text, marginTop: 5 }}>Seleccionar video</Text>
-                          <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>
+                          <Icon
+                            name="video-plus"
+                            size={40}
+                            color={colors.text}
+                          />
+                          <Text style={{ color: colors.text, marginTop: 5 }}>
+                            Seleccionar video
+                          </Text>
+                          <Text
+                            style={{
+                              color: colors.textSecondary,
+                              fontSize: 12,
+                              marginTop: 2,
+                            }}
+                          >
                             Recomendado: MP4 menor a 50MB
                           </Text>
                         </>
@@ -1138,27 +1415,44 @@ export default function AddCourseScreen({ navigation }) {
                     </TouchableOpacity>
                   ) : (
                     <>
-                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <View
+                        style={{ flexDirection: "row", alignItems: "center" }}
+                      >
                         <TextInput
                           style={[styles.input, { flex: 1 }]}
                           placeholder="URL de video (YouTube, Vimeo o enlace directo)"
                           placeholderTextColor={colors.textSecondary}
                           value={currentLesson.video_url}
-                          onChangeText={(text) => setCurrentLesson({ ...currentLesson, video_url: text })}
+                          onChangeText={(text) =>
+                            setCurrentLesson({
+                              ...currentLesson,
+                              video_url: text,
+                            })
+                          }
                         />
                         {currentLesson.video_url && (
-                          <TouchableOpacity style={styles.testButton} onPress={testVideo}>
-                            <Icon name="play" size={20} color={colors.primary} />
+                          <TouchableOpacity
+                            style={styles.testButton}
+                            onPress={testVideo}
+                          >
+                            <Icon
+                              name="play"
+                              size={20}
+                              color={colors.primary}
+                            />
                           </TouchableOpacity>
                         )}
                       </View>
-                      <Text style={{ 
-                        fontSize: 12, 
-                        color: colors.textSecondary,
-                        marginBottom: 10,
-                        fontStyle: 'italic'
-                      }}>
-                        Para YouTube: https://youtube.com/watch?v=ID o https://youtu.be/ID
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          color: colors.textSecondary,
+                          marginBottom: 10,
+                          fontStyle: "italic",
+                        }}
+                      >
+                        Para YouTube: https://youtube.com/watch?v=ID o
+                        https://youtu.be/ID
                       </Text>
                     </>
                   )}
@@ -1169,19 +1463,28 @@ export default function AddCourseScreen({ navigation }) {
                     placeholderTextColor={colors.textSecondary}
                     keyboardType="number-pad"
                     value={currentLesson.duration}
-                    onChangeText={(text) => setCurrentLesson({ ...currentLesson, duration: text })}
+                    onChangeText={(text) =>
+                      setCurrentLesson({ ...currentLesson, duration: text })
+                    }
                   />
 
                   <TextInput
-                    style={[styles.input, { height: 100, textAlignVertical: 'top' }]}
+                    style={[
+                      styles.input,
+                      { height: 100, textAlignVertical: "top" },
+                    ]}
                     placeholder="Descripción de la lección (opcional)"
                     placeholderTextColor={colors.textSecondary}
                     multiline
                     value={currentLesson.description}
-                    onChangeText={(text) => setCurrentLesson({ ...currentLesson, description: text })}
+                    onChangeText={(text) =>
+                      setCurrentLesson({ ...currentLesson, description: text })
+                    }
                   />
 
-                  <View style={{ flexDirection: 'row', gap: 12, marginTop: 24 }}>
+                  <View
+                    style={{ flexDirection: "row", gap: 12, marginTop: 24 }}
+                  >
                     <TouchableOpacity
                       style={{
                         flex: 1,
@@ -1189,12 +1492,14 @@ export default function AddCourseScreen({ navigation }) {
                         borderRadius: 10,
                         borderWidth: 1,
                         borderColor: colors.border,
-                        alignItems: 'center',
+                        alignItems: "center",
                       }}
                       onPress={() => setShowLessonModal(false)}
                       disabled={uploadingLessonVideo}
                     >
-                      <Text style={{ color: colors.text, fontWeight: '600' }}>Cancelar</Text>
+                      <Text style={{ color: colors.text, fontWeight: "600" }}>
+                        Cancelar
+                      </Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -1203,7 +1508,7 @@ export default function AddCourseScreen({ navigation }) {
                         padding: 14,
                         borderRadius: 10,
                         backgroundColor: colors.primary,
-                        alignItems: 'center',
+                        alignItems: "center",
                         opacity: uploadingLessonVideo ? 0.7 : 1,
                       }}
                       onPress={saveLesson}
@@ -1212,7 +1517,9 @@ export default function AddCourseScreen({ navigation }) {
                       {uploadingLessonVideo ? (
                         <ActivityIndicator color="#fff" />
                       ) : (
-                        <Text style={{ color: '#fff', fontWeight: 'bold' }}>Guardar lección</Text>
+                        <Text style={{ color: "#fff", fontWeight: "bold" }}>
+                          Guardar lección
+                        </Text>
                       )}
                     </TouchableOpacity>
                   </View>
